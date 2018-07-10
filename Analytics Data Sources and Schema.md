@@ -23,6 +23,9 @@ Application Insights has many reports (https://docs.microsoft.com/en-us/azure/ap
 
 ### Dependency
 Understanding flow between components is a primary scenario that our customers are interested. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
+
+Note: Just an example, we will obviously not show our internal Redis or other internal components.  Just to see what the visualization looks like.
+
 ![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap.PNG)
 
 We can use this concept to model operations within the Bot Framework and surface information about our primary dependencies (LUIS and QnA maker) and developers can model their custom components as well.
@@ -49,13 +52,14 @@ r.Context.Operation.Id = TRACE_ID; // initiate the logical operation ID (trace i
 r.Context.Operation.ParentId = null; // this is the first span in a trace
 r.Context.Cloud.RoleName = "Facebook Channel"; // this is the name of the node on app map
 ```
-NEW WORK!!
+**NEW WORK FOR CHANNEL**
 In addition to the "Correlation ID" a "Dependency ID" is required to fully light up Application Insights.  
 We also want to track a bot as a depdency, so we will add a dependency call.
+
 ```csharp
 var d = new DependencyTelemetry(
     dependencyTypeName: "Http",
-    target: $"mybot.com", //host name
+    target: $"mybot.com", // customer bot 
     dependencyName: "POST /api/messages",
     data: "https://mybot.com/api.messages",  // Command which initiated call
     startTime: DateTimeOffset.Now,
@@ -69,6 +73,17 @@ d.Context.Cloud.RoleName = "Frontend"; // this is the name of the node on app ma
 new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackDependency(d);
 ```
 Today a HTTP header is sent from the Channel Service to the bot passing the correlation ID.  In addition, the Dependency ID will also need to be passes.
+
+The Application Insights team have suggested header names.  We can continue with our existing correlation header, and possibly adopt their header.
+
+
+
+```json
+Future: Adopt W3C Standards from Sergey (which is different than what App Insights is proposing now)
+https://w3c.github.io/distributed-tracing/report-trace-context.html
+```
+
+
 
 
 #### Customer Bot Receive/Send Telemetry
@@ -161,11 +176,22 @@ Funnels are a series of Application Insight custom events.  These events serve a
 ```csharp
 telemetry.TrackEvent("MyEvent");
 ```
-Prompts represent customer input.  Prompts will emit a new event in the format:
+**NEW WORK FOR SDK:**
+
+If we plumb this at the Prompt level, we need a compact representation of an Event ID/Name.  Doing something like:
+
 ```
 <PromptType>:<Text>
 ```
-For example, "ConfirmPrompt: Do you want to book the reservation?".
+will most likely **not** work.
+
+
+
+**NEW WORK FOR CHANNEL**
+
+In order to make the funnel, a UserID and SessionID must be added to increase the precision.  It's not clear for each distinct channel how precise we can be.  This needs to be set on the Context.User.Id and Context.Session.Id properties.
+
+
 
 ### User Flow
 Userflow can give a good idea of where the common paths customers are taking.  This again can derive from events.
