@@ -1,9 +1,9 @@
 # Analytics Data Sources and Schema
 
 ## Summary
-A typical Azure Bot Service employs several classes of components that work together to create a production bot.  Ths document describes data source and proposes the schema to collect for each data source.  A primary goal is to enable tracing a message flow throughout the system through correlated identifiers.  This data is optionally collected and intended for the customer only.  The internal Microsoft teams will not have access to the data collected.
+A typical Azure Bot Service employs several components that work together to create a production bot.  The primary goal is to enable tracing a message flow throughout the system through correlated identifiers.  This data is optionally collected and intended for customer-use only.  The internal Microsoft teams will not have access to the data collected.
 
-This is primarily capturing events that occur on the wire.  There are also events that occur within each service as processing and custom events the bot developer will want to correlate.
+This is primarily capturing events that occur on the wire.  There are also events that occur within each service as processing and custom events the bot developer will want to correlate, for example Middleware or dialog processing.
 
 ![Summary of data sources](https://raw.githubusercontent.com/daveta/analytics/master/AnalyticsDataSources.png)
 
@@ -15,9 +15,6 @@ Today the Bot developer can opt into purchasing Application Insights for their s
 ```https://docs.microsoft.com/en-us/azure/application-insights/application-insights-data-model```
 
 Application Insights has many reports (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-usage-overview) that can be used if  tables are populated  appropriately. In addition, we inherit the extensibility model (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-api-custom-events-metrics) that Application Insights has in terms of custom events that can be logged and leveraged.  Not to mention the other tooling.
-
-
-```Note that Application Insights is not a developer ELK or tracing infratructure play (although you can use it this way if you want to pay the money).  They cite Amazon XRay as their compete.```
 
 
 
@@ -53,8 +50,10 @@ r.Context.Operation.ParentId = null; // this is the first span in a trace
 r.Context.Cloud.RoleName = "Facebook Channel"; // this is the name of the node on app map
 ```
 **NEW WORK FOR CHANNEL**
-In addition to the "Correlation ID" a "Dependency ID" is required to fully light up Application Insights.  
-We also want to track a bot as a depdency, so we will add a dependency call.
+
+- Dependency ID : In addition to the "Correlation ID" a "Dependency ID" is required to fully light up Application Insights.  
+
+We also want to track a bot as a dependency, so we will add a dependency call.
 
 ```csharp
 var d = new DependencyTelemetry(
@@ -75,8 +74,6 @@ new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackD
 Today a HTTP header is sent from the Channel Service to the bot passing the correlation ID.  In addition, the Dependency ID will also need to be passes.
 
 The Application Insights team have suggested header names.  We can continue with our existing correlation header, and possibly adopt their header.
-
-
 
 ```json
 Future: Adopt W3C Standards from Sergey (which is different than what App Insights is proposing now)
@@ -173,28 +170,24 @@ Funnels are a series of Application Insight custom events.  These events serve a
 
 ![Application Insights Sample Funnel](https://raw.githubusercontent.com/daveta/analytics/master/funnel.PNG)
 
+Logging events in Application Insights is pretty simple:
+
 ```csharp
 telemetry.TrackEvent("MyEvent");
 ```
+In the context, user/session identifiers should also be set.
+
 **NEW WORK FOR SDK:**
+Funnels work well for dialogs and prompts that have a clear progression.
 
-If we plumb this at the Prompt level, we need a compact representation of an Event ID/Name.  Doing something like:
+- Prompt Identifier
 
-```
-<PromptType>:<Text>
-```
-will most likely **not** work.
-
-
-
-**NEW WORK FOR CHANNEL**
-
-In order to make the funnel, a UserID and SessionID must be added to increase the precision.  It's not clear for each distinct channel how precise we can be.  This needs to be set on the Context.User.Id and Context.Session.Id properties.
+If we plumb this at the Prompt level, we need a compact representation of an Event ID/Name. Normally this is an enum, but it needs to be meaningful to the customer.  Therefore a new property should be added to the prompt that will log the appropriate event.
 
 
 
 ### User Flow
-Userflow can give a good idea of where the common paths customers are taking.  This again can derive from events.
+Userflow can give a good idea of where the common paths customers are taking.  This again can derive from events.  The proposal is Prompts are the primary thing emitting events.
 ![Application Insights Userflow](https://raw.githubusercontent.com/daveta/analytics/master/userflow.PNG)
 
 
