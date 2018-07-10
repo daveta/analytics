@@ -9,127 +9,156 @@ This is primarily capturing events that occur on the wire.  There are also event
 
 Also see "Analytics and Logging" for further background.
 
-## 1. Extenal Messaging Service
+## Background
+Today the Bot developer can opt into purchasing Application Insights for their subscription. We are adopting the Application Insights infrastructure for Bot Analytics.    Adopting Application Insights means adopting their data model. 
 
-Examples of external messaging services are Slack, Facebook Messenger, WeChat, etc.
+```https://docs.microsoft.com/en-us/azure/application-insights/application-insights-data-model```
 
-Data is logged from the Bot Connector Service:
-```json
+Application Insights has many reports (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-usage-overview) that can be used if  tables are populated  appropriately. In addition, we inherit the extensibility model (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-api-custom-events-metrics) that Application Insights has in terms of custom events that can be logged and leveraged.  Not to mention the other tooling.
+
+
+```Note that Application Insights is not a developer ELK or tracing infratructure play (although you can use it this way if you want to pay the money).  They cite Amazon XRay as their compete.```
+
+
+
+### Dependency
+Understanding flow between components is a primary scenario that our customers are interested. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
+
+We can use this concept to model operations within the Bot Framework and surface information about our primary dependencies (LUIS and QnA maker) and developers can model their custom components as well.
+
+We will assume the same Application Insights Instrumentation Key.
+
+The following example illustrates how we can use this infrastructure.
+
+#### Channel Service Telemetry
+When a customer types a message into a bot, the first stop is the Channel Service.  The service will log the Application Insights standard Request telemetry.  During this stop, the request receives an "Operation ID" (or TRACE_ID).  We will refer to this as the "Correlation ID". 
+
+From the Channel Service, this is a GUID that is populated in their request:
+```csharp
+var r = new RequestTelemetry(
+    name: "Facebook Receive",
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    responseCode: "200",
+    success: true)
 {
-    "@context" : "http://www.microsoft.com/botFramework/schemas/v1",
-    "@type" : "botAnalyticsRecord",
-    "@id" : "{activityId}",
-    "receivedAtDateTime" : "2017-08-25T10:49:05.234Z",
-    "botId" : "{Unique bot identifier}"
-}
+    Source = "" //no source specified
+};
+r.Context.Operation.Id = TRACE_ID; // initiate the logical operation ID (trace id or CORRELATION ID)
+r.Context.Operation.ParentId = null; // this is the first span in a trace
+r.Context.Cloud.RoleName = "Facebook Channel"; // this is the name of the node on app map
 ```
-```json
+NEW WORK!!
+In addition to the "Correlation ID" a "Dependency ID" is required to fully light up Application Insights.  
+We also want to track a bot as a depdency, so we will add a dependency call.
+```csharp
+var d = new DependencyTelemetry(
+    dependencyTypeName: "Http",
+    target: $"mybot.com", //host name
+    dependencyName: "POST /api/messages",
+    data: "https://mybot.com/api.messages",  // Command which initiated call
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    resultCode: "200",
+    success: true);
+d.Context.Operation.ParentId = r.Id;
+d.Context.Operation.Id = TRACE_ID;
+d.Context.Cloud.RoleName = "Frontend"; // this is the name of the node on app map
+
+new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackDependency(d);
+```
+Today a HTTP header is sent from the Channel Service to the bot passing the correlation ID.  In addition, the Dependency ID will also need to be passes.
+
+
+#### Customer Bot Receive/Send Telemetry
+The bot receives the Correlation and Dependency ID's and then logs it's own Application Insights Request message.  This will be peformed automatically in the SDK in the connector.
+Request telemetry will be logged with the same Correlation ID.
+
+```csharp
+r = new RequestTelemetry(
+    name: "POST /api/messages",
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    responseCode: "200",
+    success: true)
 {
-    "@type" : "botAnalyticsRecord, botConversation",
-    "conversationId" : "{converatonId}",
-    "conversationTurn" : "{int}"
-}
+    Url = new Uri("https://mybot.com/api/messages")
+};
+r.Context.Operation.Id = CORRELATION_ID; // received from http header
+r.Context.Operation.ParentId = d.Id; // received from http header (Dependency ID)
+r.Context.Cloud.RoleName = "Bot Service"; // this is the name of the node on app map
+
+new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackRequest(r);
+```
+At this point, we now are correlated with the original request coming from the Channel Service.
+
+#### Track LUIS/QnA invocation Telemetry
+During processing of the Bot request, other Cognitive Services are employed.  Within each client component, it will log Dependency telemetry to reflect the call.
+
+```csharp
+d = new DependencyTelemetry(
+    dependencyTypeName: "http",
+    target: $"api.cognitive.microsoft.com",
+    dependencyName: "GET /luis",
+    data: "https://api.cognitive.microsoft.com/luis/v2.0/apps?q=turn%20on%20the%20bedroom%20light",  // Command which initiated call
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    resultCode: "200",
+    success: true);
+d.Context.Operation.ParentId = r.Id;
+d.Context.Operation.Id = TRACE_ID;
+d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
+
+new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
 ```
 
-Properties for *botAnalyticsRecord*
-Property | Expected Type | Description
---- | --- | ---
-receivedAtDateTime | [DateTime](http://schema.org/DateTime) | The time the activity was received by the bot.
-botId | [identifier](http://schema.org/identifier) | The identifer that uniquely identifes the bot.
 
-**Note**: Not all records will a Microsoft defined activity Id. Examples of this include bot initiated processing in the context of a timer or other external signals. For these activities, the bot should create a new unique Activity Id and populate the @id field with that result.
+#### Track Middleware Dependency
+Middleware components will track their own dependency.
+For example, here's what the AI.Translate logs:
+```csharp
+d = new DependencyTelemetry(
+    dependencyTypeName: "middleware",
+    target: $"ai.translation",
+    dependencyName: "Translate Text",
+    data: "<Text to convert>",  // Command which initiated call
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    resultCode: "200",
+    success: true);
+d.Context.Operation.ParentId = r.Id;
+d.Context.Operation.Id = TRACE_ID;
+d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
 
-## 2. 1st Party Messaging Service
-Examples of 1st party messaging services are Skype, Microsoft Teams, etc.  The only distinction is these are services run internally within Microsoft.
-
-## 3. Customer Bot Service
-There are two messages that are passed.
-### Connector Service to Bot
-These are Activity events that occur when an end-use has posted a message or performed an action that the Connector Service notifies the Bot service about.
-### Bot to Connector Service
-These are Activity events that occur whena  response is posted back from the ser
-
-
-## 4. QNA Maker
-
-## 5. LUIS
-
-
-```json
-{
-    "@type" : "botAnalyticsRecord, luisOperations",
-    "luisOperations" : [
-        {
-            "@id" : "{LUIS Operation ID}",
-            "requestDateTime" : "{datetime}",
-            "duration" : "{timespan}",
-            "responseCode" : "200",
-            "languageModelId" : "{Language Model Id}",
-            "q":"turn on the camera",
-            "rawResponse":"[{\"intent\":\"OpenCamera\",\"score\":0.976928055},
-                        {\"intent\":\"None\",\"score\":0.0230718572}]"
-        },
-        {
-            "@id" : "{LUIS Operation ID}",
-            "requestDateTime" : "{datetime}",
-            "duration" : "{timespan}",
-            "responseCode" : "200",
-            "languageModelId" : "{Language Model Id}",
-            "q":"turn on the camera",
-            "rawResponse":"[{\"intent\":\"takePicture\",\"score\":0.976928055},
-                        {\"intent\":\"None\",\"score\":0.0230718572}]"
-        }
-    ]
-}
+new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
 ```
 
-Properties for *luisOperations*
+#### Track Storage Dependency
+Any storage should be modeled as a dependency.  For example, when we log transcripts we will log:
+```csharp
+d = new DependencyTelemetry(
+    dependencyTypeName: "storage",
+    target: $"Azure Blob",
+    dependencyName: "Store",
+    data: "Transcripts",  // Command which initiated call
+    startTime: DateTimeOffset.Now,
+    duration: TimeSpan.FromSeconds(1),
+    resultCode: "200",
+    success: true);
+d.Context.Operation.ParentId = r.Id;
+d.Context.Operation.Id = TRACE_ID;
+d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
 
-Note: LUIS Operations is an array of LuisOperation
-
-Property | Expected Type | Description
---- | --- | ---
-duration | [Duration](http://schema.org/Duration) | The elapsed time by the API call to Luis.
-requestDateTime | [DateTime](http://schema.org/DateTime) | The time the request to Luis was initiated.
-languageModelId | [identifier](http://schema.org/identifier) | The id of the LUIS model used for the operation.
-q | String | The Users Utterance (the "q" parameter passed into the LUIS query)
-rawResponse | string | The raw response from LUIS.
-responseCode | int | The HTTP Response code returned from LUIS
-
-
-## 7. Customer Code
-For bots that navigate users between prompts, a navigation facet is added into the model. This facet treats each prompt as a developer geneated IRI (similar to a web page), and provides origin -> destion nodes.
-;
-```json
-{
-    "@type" : "botAnalyticsRecord, botNavigation",
-    "origin": "{userDefinedIRI}/promptName",
-    "destination": "{userDefinedIRI}/promptName"
-}
+new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
 ```
 
-Properties for *botNavigation*
-
-Property | Expected Type | Description
---- | --- | ---
-origin | IRI | The developer defined identifer that identifies a prompt within the scope of a given bot. This field represents the prompt the user last visited. In terms of workflow, the user visited this prompt, entered an utterance, and then (as the result of this activity) navigated to the *destination* prompt. This field is generally expected to be of the form: *bot://companyname/botname/dialogname/promptName*.
-destination | IRI | The developer defined identifer, in IRI form, that identifies a prompt within the scope of a given bot. This field represents the prompt the user is being redirected to as part of the activity being processed. In terms of workflow, the user visited the *origin* prompt, entered an utterance, and now is being send to a new prompt. This field is generally expected to be of the form: *bot://companyname/botname/dialogname/promptName*.
-
-
-For example:
-1. Bot sends a greeting prompt to the user. "Hello. I'm ComBot. Ask me about COM Interfaces.".
-    * The URI for the prompt is: bot://contoso.com/combot/greetingPrompt
-2. User types "What is IUnknown?"
-3. Bot sends a card with details around IUnknown.
-    * The URI for the prompt is: bot://contoso.com/combot/IUnknownOverviewCard
-
-
-## 8. Cosmos DB Graph Database
-The destination for all of the data will reside in Cosmos DB as JSON-LD documents.
-
-
-
-## 9. Application Insights
-Existing Application Insights data collection will still exist.
-
-
+### Funnel
+Funnels are a series of Application Insight custom events.  These events serve as milestones in the funnel.
+```csharp
+telemetry.TrackEvent("MyEvent");
+```
+Prompts represent customer input.  Prompts will emit a new event in the format:
+```
+<PromptType>:<Text>
+```
+For example, "ConfirmPrompt: Do you want to book the reservation?".
