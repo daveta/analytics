@@ -23,6 +23,7 @@ Application Insights has many reports (https://docs.microsoft.com/en-us/azure/ap
 
 ### Dependency
 Understanding flow between components is a primary scenario that our customers are interested. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
+![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap.PNG)
 
 We can use this concept to model operations within the Bot Framework and surface information about our primary dependencies (LUIS and QnA maker) and developers can model their custom components as well.
 
@@ -154,6 +155,9 @@ new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(
 
 ### Funnel
 Funnels are a series of Application Insight custom events.  These events serve as milestones in the funnel.
+
+![Application Insights Sample Funnel](https://raw.githubusercontent.com/daveta/analytics/master/funnel.PNG)
+
 ```csharp
 telemetry.TrackEvent("MyEvent");
 ```
@@ -162,3 +166,9 @@ Prompts represent customer input.  Prompts will emit a new event in the format:
 <PromptType>:<Text>
 ```
 For example, "ConfirmPrompt: Do you want to book the reservation?".
+
+### User Flow
+Userflow can give a good idea of where the common paths customers are taking.  This again can derive from events.
+![Application Insights Userflow](https://raw.githubusercontent.com/daveta/analytics/master/userflow.PNG)
+
+
