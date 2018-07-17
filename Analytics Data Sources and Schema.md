@@ -17,7 +17,6 @@ Today the Bot developer can opt into purchasing Application Insights for their s
 Application Insights has many reports (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-usage-overview) that can be used if  tables are populated  appropriately. In addition, we inherit the extensibility model (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-api-custom-events-metrics) that Application Insights has in terms of custom events that can be logged and leveraged.  Not to mention the other tooling.
 
 
-
 ### Dependency
 Understanding flow between components is a primary scenario that our customers are interested. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
 
