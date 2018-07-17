@@ -98,22 +98,28 @@ If we did *not* find knowledge for the user the following custom dimensions will
 ### Dependency
 Understanding flow between components is a primary scenario that our customers are interested in. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
 
-Note: Just an example, Channel naming will most likely be different, and all Channels won't fully support immediately.
+Note: Just an example, Channel most likely will not be included.
 
 ![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap_bot.PNG)
 
 We will assume the same Application Insights Instrumentation Key.
 
-Each dependency is logged by the closest component.
+Each dependency is logged by the closest component as a Trace Activity.
 
 | Source | Destination | Component logged |
 | :---         |     :---:      |          :--- |
-| Channel Service | Bot   | Channel Service    |
+| Channel Service (pri3) | Bot   | Channel Service    |
 | Bot     | LUIS  | LuisRecognizer     |
 | Bot     | QNA  | QnaRecognizer     |
-| Bot     | Middleware Component  |      |
+| Bot     | Middleware Component  | Middleware Component     |
+| Bot     | Storage Component  | Storage Component     |
+| Bot     | Channel Service (pri3)  | Transcript Logger     |
 
 
+The TranscriptLogger will perform the actual logging into Application Insights.  It will automatically populate the following properties so the developer won't need to:
+- Calculate durations
+- Keep track/stamp each dependency with appropriate CorrelationID (OperationID) and previous component (ParentID)
+- Keep a single instance of the TelemetryClient in memory.
 
 
 The following example illustrates how we can use this infrastructure.
