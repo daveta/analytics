@@ -16,21 +16,109 @@ Today the Bot developer can opt into purchasing Application Insights for their s
 
 Application Insights has many reports (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-usage-overview) that can be used if  tables are populated  appropriately. In addition, we inherit the extensibility model (https://docs.microsoft.com/en-us/azure/application-insights/app-insights-api-custom-events-metrics) that Application Insights has in terms of custom events that can be logged and leveraged.  Not to mention the other tooling.
 
+### What is a Turn?
+A "Turn" is a concept that represents a complete round trip within a Bot - from the original request to potentially multiple responses.  The data backing a turn begins when a message is received by a Bot.  You can link events in the turn via several identifiers.  
+
+### Identifiers
+There are several correlating concepts identifiers that are being employed at two levels that tie the events together.
+
+**Bot Level**
+*ActivityID (aka MessageID)*  - Created in the Channel Service, this represents a unique message id to/from the channel service.
+*ReplyID* - When a Bot responds to a message, the ReplyID is the ActivityID of the original message.
+
+*ConversationID* - Channel-specific representation of a conversation. 
+
+**Application Insights Level** 
+*CorrelationID (aka TraceID)* - This identifier represents a single instance of processing a message.  Or conceptually, it a container that holds a graph of dependency calls (see DependencyID).  There are events that contain this identifier begining from the channel receiving a message, sending the message to the Bot Service, the Bot Service invocations of Middleware/LUIS/QNA, and the Bot Service N-reponses back to the customer.  
+*DependencyID* - This identifier represent a single call from one component to another.  The component could be in-process or out of process.  The DependencyID is logged both in the caller and callee.
+
+### CustomEvent: BotMessageReceived
+
+Currently the TranscriptLoggerMiddleware logs entire Activity objects to storage, including when new Activity objects are received.  We will leverage the existing infrastructure to log the BotMessageReceived object into Application Insights.  
+
+- Channel  (Source channel - e.g. Skype, Cortana, Teams)
+- Text (Contents of the message - may not be populated in extreme circumstances where the customer has asked us not to)
+- FromId
+- FromName
+- ConversationId
+- ConversationName
+- Sentiment (optional but should be there in most cases)
+- Locale
+- Language
+- ClientInfo (most channels will provide this and contents will vary). Skype consumer only has locale, webchat has none, etc.
+	○ Here is an example from Teams
+	{
+	  "locale": "en-GB",
+	  "country": "GB",
+	  "platform": "Windows"
+	}
+- ActivityID
+- CorrelationID
+
+
+Intent.INTENTName
+### CustomEvent: Luis Intent
+
+The LUIS Recognizer will use the existing infrastructure to log Trace Activity events.  Currently, Trace Activity events are logged by the TranscriptLoggerMiddleware and consumed by the Emulator.  This infrastructure will be leveraged to log into Application Insights.
+
+**Name of Event**: Intent.INTENTName
+
+Every LUIS Intent hit will result in an Application Insights event being created. This event is called: Intent.INTENTNAME. It will have the following custom dimensions:
+
+- Score
+- Question
+- ConversationId (for correlation purposes)
+- ActivityID
+- CorrelationID
+
+
+
+### Unknown Question
+If a question goes to a Knowledge Source (QnA Maker) an event will be raised to track this including information to help you understand if we found something for the user or if we didn't. 
+
+The QNAMaker Recognizer will fire Trace Activities that will feed the necessary data.
+
+**Name of Event**: UnknownQuestion
+
+If we found knowledge the following custom dimensions will be added
+
+- Question
+- FoundInKnowledgeSource - set to true
+- UserAcceptedAnswer (if the user provided feedback and the developer asked the user) set to true or false based on feedback
+- ActivityID
+- CorrelationID
+
+If we did *not* find knowledge for the user the following custom dimensions will be added:
+
+- Question
+- FoundInKnowledgeSource - set to false
+- KnowledgeItemsDiscarded - if we find items but discard them because the score is too low we add these to help with diagnosis. RecordID and Title will be provided
+- Will be provided in the format of ID=Title,ID=Title,ID=Title
 
 ### Dependency
-Understanding flow between components is a primary scenario that our customers are interested. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
+Understanding flow between components is a primary scenario that our customers are interested in. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
 
-Note: Just an example, we will obviously not show our internal Redis or other internal components.  Just to see what the visualization looks like.
+Note: Just an example, Channel naming will most likely be different, and all Channels won't fully support immediately.
 
-![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap.PNG)
-
-We can use this concept to model operations within the Bot Framework and surface information about our primary dependencies (LUIS and QnA maker) and developers can model their custom components as well.
+![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap_bot.PNG)
 
 We will assume the same Application Insights Instrumentation Key.
 
+Each dependency is logged by the closest component.
+
+| Source | Destination | Component logged |
+| :---         |     :---:      |          :--- |
+| Channel Service | Bot   | Channel Service    |
+| Bot     | LUIS  | LuisRecognizer     |
+| Bot     | QNA  | QnaRecognizer     |
+| Bot     | Middleware Component  |      |
+
+
+
+
 The following example illustrates how we can use this infrastructure.
 
-#### Channel Service Telemetry
+#### Channel Service Telemetry (Pri 3)
 When a customer types a message into a bot, the first stop is the Channel Service.  The service will log the Application Insights standard Request telemetry.  During this stop, the request receives an "Operation ID" (or TRACE_ID).  We will refer to this as the "Correlation ID". 
 
 From the Channel Service, this is a GUID that is populated in their request:
@@ -48,29 +136,22 @@ r.Context.Operation.Id = TRACE_ID; // initiate the logical operation ID (trace i
 r.Context.Operation.ParentId = null; // this is the first span in a trace
 r.Context.Cloud.RoleName = "Facebook Channel"; // this is the name of the node on app map
 ```
-**NEW WORK FOR CHANNEL**
+**NEW WORK FOR CHANNEL SERVICE** 
+
+**Incoming Request** 
+
+In this scenario, messages coming in from the messaging service with the Bot as the destination, the Channel Service needs to send an additional Application Insights identifier.
 
 - Dependency ID : In addition to the "Correlation ID" a "Dependency ID" is required to fully light up Application Insights.  
 
-We also want to track a bot as a dependency, so we will add a dependency call.
-
-```csharp
-var d = new DependencyTelemetry(
-    dependencyTypeName: "Http",
-    target: $"mybot.com", // customer bot 
-    dependencyName: "POST /api/messages",
-    data: "https://mybot.com/api.messages",  // Command which initiated call
-    startTime: DateTimeOffset.Now,
-    duration: TimeSpan.FromSeconds(1),
-    resultCode: "200",
-    success: true);
-d.Context.Operation.ParentId = r.Id;
-d.Context.Operation.Id = TRACE_ID;
-d.Context.Cloud.RoleName = "Frontend"; // this is the name of the node on app map
-
-new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackDependency(d);
-```
 Today a HTTP header is sent from the Channel Service to the bot passing the correlation ID.  In addition, the Dependency ID will also need to be passes.
+
+**Outgoing Request**
+
+In this scenario, messages originating from the Bot, going outbound to external messaging services need to handle new HTTP headers originating from the Bot.  
+
+- Correlation ID: 
+- Dependency ID
 
 The Application Insights team have suggested header names.  We can continue with our existing correlation header, and possibly adopt their header.
 
@@ -82,34 +163,27 @@ https://w3c.github.io/distributed-tracing/report-trace-context.html
 
 
 
-#### Customer Bot Receive/Send Telemetry
+#### Request: Customer Bot Receive/Send Telemetry (Pri 1)
 The bot receives the Correlation and Dependency ID's and then logs it's own Application Insights Request message.  This will be peformed automatically in the SDK in the connector.
 Request telemetry will be logged with the same Correlation ID.
 
 ```csharp
-r = new RequestTelemetry(
+traceinfo = new RequestTelemetry(
     name: "POST /api/messages",
     startTime: DateTimeOffset.Now,
     duration: TimeSpan.FromSeconds(1),
     responseCode: "200",
     success: true)
-{
-    Url = new Uri("https://mybot.com/api/messages")
-};
-r.Context.Operation.Id = CORRELATION_ID; // received from http header
-r.Context.Operation.ParentId = d.Id; // received from http header (Dependency ID)
-r.Context.Cloud.RoleName = "Bot Service"; // this is the name of the node on app map
-
-new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.TrackRequest(r);
+var traceActivity = Schema.Activity.CreateTraceActivity("Request", RequestTraceType, traceinfo, RequestTraceLabel);
+await context.SendActivityAsync(traceActivity).ConfigureAwait(false);```
 ```
 At this point, we now are correlated with the original request coming from the Channel Service.
 
-#### Track LUIS/QnA invocation Telemetry
-During processing of the Bot request, other Cognitive Services are employed.  Within each client component, it will log Dependency telemetry to reflect the call.
+#### Dependency: Track LUIS/QnA invocation  (Pri 1)
+During processing of the Bot request, other Cognitive Services are employed.  Within each client Recognizer component, it will log Dependency telemetry to reflect the call.  This is in addition to the custom events that are also described in this document.
 
 ```csharp
-d = new DependencyTelemetry(
-    dependencyTypeName: "http",
+traceinfo = new DependencyTelemetry(
     target: $"api.cognitive.microsoft.com",
     dependencyName: "GET /luis",
     data: "https://api.cognitive.microsoft.com/luis/v2.0/apps?q=turn%20on%20the%20bedroom%20light",  // Command which initiated call
@@ -117,54 +191,48 @@ d = new DependencyTelemetry(
     duration: TimeSpan.FromSeconds(1),
     resultCode: "200",
     success: true);
-d.Context.Operation.ParentId = r.Id;
-d.Context.Operation.Id = TRACE_ID;
-d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
-
-new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
+var traceActivity = Schema.Activity.CreateTraceActivity("LUIS", LUISTraceType, traceinfo, LUISTraceLabel);
+await context.SendActivityAsync(traceActivity).ConfigureAwait(false);```
 ```
 
 
-#### Track Middleware Dependency
-Middleware components will track their own dependency.
+#### Dependency: Track Middleware (Pri 2)
+Middleware components will track their *own* dependency.  This includes tracking the duration of the time.
+
+
+
 For example, here's what the AI.Translate logs:
 ```csharp
-d = new DependencyTelemetry(
-    dependencyTypeName: "middleware",
+
+... Perform all your Middleware processing ..
+
+// Note: The duration is inferred, so logging the dependency
+// needs to be at the end so the duration is accurate.
+traceinfo = new DependencyTelemetry(
     target: $"ai.translation",
     dependencyName: "Translate Text",
     data: "<Text to convert>",  // Command which initiated call
-    startTime: DateTimeOffset.Now,
-    duration: TimeSpan.FromSeconds(1),
-    resultCode: "200",
     success: true);
-d.Context.Operation.ParentId = r.Id;
-d.Context.Operation.Id = TRACE_ID;
-d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
-
-new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
+var traceActivity = Schema.Activity.CreateTraceActivity("MyMiddleware", TranslateTraceType, traceinfo, TranslateTraceLabel);
+await context.SendActivityAsync(traceActivity).ConfigureAwait(false);```
 ```
 
-#### Track Storage Dependency
-Any storage should be modeled as a dependency.  For example, when we log transcripts we will log:
+#### Dependency: Track Storage Dependency
+Any storage operations should be modeled as a dependency.  For example, when we perform blob read operations:
 ```csharp
-d = new DependencyTelemetry(
-    dependencyTypeName: "storage",
+
+traceinfo = new DependencyTelemetry(
     target: $"Azure Blob",
-    dependencyName: "Store",
-    data: "Transcripts",  // Command which initiated call
+    dependencyName: "Read",
     startTime: DateTimeOffset.Now,
     duration: TimeSpan.FromSeconds(1),
     resultCode: "200",
     success: true);
-d.Context.Operation.ParentId = r.Id;
-d.Context.Operation.Id = TRACE_ID;
-d.Context.Cloud.RoleName = Bot Service"; // this is the name of the node on app map
-
-new TelemetryClient() { InstrumentationKey = SINGLE_INSTRUMENTATION_KEY }.Track(d);```
+var traceActivity = Schema.Activity.CreateTraceActivity("AzureBlob", BlobTraceType, traceinfo, BlobTraceLabel);
+await context.SendActivityAsync(traceActivity).ConfigureAwait(false);```
 ```
 
-### Funnel
+### Funnel (Pri2)
 Funnels are a series of Application Insight custom events.  These events serve as milestones in the funnel.
 
 ![Application Insights Sample Funnel](https://raw.githubusercontent.com/daveta/analytics/master/funnel.PNG)
