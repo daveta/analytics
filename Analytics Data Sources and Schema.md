@@ -102,24 +102,29 @@ Note: Just an example, Channel most likely will not be included.
 
 ![Application Insights Sample App map](https://raw.githubusercontent.com/daveta/analytics/master/appmap_bot.PNG)
 
+Above, each green circle is logged as an Application Insight Request object, and the smaller bubbles are logged as a Dependency object.
+
 We will assume the same Application Insights Instrumentation Key.
 
-Each dependency is logged by the closest component as a Trace Activity.
-
-| Source | Destination | Component logged |
-| :---         |     :---:      |          :--- |
-| Channel Service (pri3) | Bot   | Channel Service    |
-| Bot     | LUIS  | LuisRecognizer     |
-| Bot     | QNA  | QnaRecognizer     |
-| Bot     | Middleware Component  | Middleware Component     |
-| Bot     | Storage Component  | Storage Component     |
-| Bot     | Channel Service (pri3)  | Transcript Logger     |
-
+Each Dependency is logged by the closest component as a Trace Activity.  It will log only a few fields of the DepedencyTelemetry object (examples are below). 
 
 The TranscriptLogger will perform the actual logging into Application Insights.  It will automatically populate the following properties so the developer won't need to:
+
 - Calculate durations
 - Keep track/stamp each dependency with appropriate CorrelationID (OperationID) and previous component (ParentID)
 - Keep a single instance of the TelemetryClient in memory.
+
+
+
+| Source | Destination | Component logged |
+| :---         |     :---:      |          :--- |
+| Channel Service (pri3) | Bot   | Channel Service (Direct log into AppInsights) |
+| Bot     | LUIS  | LuisRecognizer (Fire TraceActivity) |
+| Bot     | QNA  | QnaRecognizer (Fire TraceActivity) |
+| Bot     | Middleware Component  | Middleware Component (Fire TraceActivity) |
+| Bot     | Storage Component  | Storage Component (Fire TraceActivity) |
+| Bot     | Channel Service (pri3)  | Transcript Logger (Fire TraceActivity) |
+
 
 
 The following example illustrates how we can use this infrastructure.
@@ -141,8 +146,9 @@ var r = new RequestTelemetry(
 r.Context.Operation.Id = TRACE_ID; // initiate the logical operation ID (trace id or CORRELATION ID)
 r.Context.Operation.ParentId = null; // this is the first span in a trace
 r.Context.Cloud.RoleName = "Facebook Channel"; // this is the name of the node on app map
+// Fire Request directly into Application Insights
 ```
-**NEW WORK FOR CHANNEL SERVICE** 
+**NEW WORK FOR CHANNEL SERVICE**
 
 **Incoming Request** 
 
@@ -259,7 +265,7 @@ If we plumb this at the Prompt level, we need a compact representation of an Eve
 
 
 
-### User Flow
+### User Flow (Pri 4)
 Userflow can give a good idea of where the common paths customers are taking.  This again can derive from events.  The proposal is Prompts are the primary thing emitting events.
 ![Application Insights Userflow](https://raw.githubusercontent.com/daveta/analytics/master/userflow.PNG)
 
