@@ -3,14 +3,12 @@
 ## Summary
 A typical Azure Bot Service employs several components that work together to create a production bot.  The primary goal is to enable tracing a message flow throughout the system through correlated identifiers.  This data is optionally collected and intended for customer-use only.  The internal Microsoft teams will not have access to the data collected.
 
-This is primarily capturing events that occur on the wire.  There are also events that occur within each service as processing and custom events the bot developer will want to correlate, for example Middleware or dialog processing.
+This is primarily focused on capturing events that occur after the customer Bot has received a message.  There are events that occur in-process and external services the Bot requires for storage, etc.  Event correlation extending out to the Bot Connector Service and beyond is not a priority, as the company's distributed event correlation story gets ironed out (see "Application Insights Identifiers" section below).
 
 ![Summary of data sources](https://raw.githubusercontent.com/daveta/analytics/master/AnalyticsDataSources.png)
 
-Also see "Analytics and Logging" for further background.
-
 ## Background
-Today the Bot developer can opt into purchasing Application Insights for their subscription. We are adopting the Application Insights infrastructure for Bot Analytics.    Adopting Application Insights means adopting their data model. 
+Today the Bot developer can opt into purchasing Application Insights for their subscription. Currently, the Connector Service will log events for Exceptions and Custom Events for messages received.  The Bot Framework SDK is adopting this Application Insights infrastructure for Bot Analytics.    Adopting Application Insights means adopting their data model. 
 
 ```https://docs.microsoft.com/en-us/azure/application-insights/application-insights-data-model```
 
@@ -22,15 +20,51 @@ A "Turn" is a concept that represents a complete round trip within a Bot - from 
 ### Identifiers
 There are several correlating concepts identifiers that are being employed at two levels that tie the events together.
 
-**Bot Level**
+**Bot Level Identifiers** 
 *ActivityID (aka MessageID)*  - Created in the Channel Service, this represents a unique message id to/from the channel service.
 *ReplyID* - When a Bot responds to a message, the ReplyID is the ActivityID of the original message.
-
 *ConversationID* - Channel-specific representation of a conversation. 
 
-**Application Insights Level** 
-*CorrelationID (aka TraceID)* - This identifier represents a single instance of processing a message.  Or conceptually, it a container that holds a graph of dependency calls (see DependencyID).  There are events that contain this identifier begining from the channel receiving a message, sending the message to the Bot Service, the Bot Service invocations of Middleware/LUIS/QNA, and the Bot Service N-reponses back to the customer.  
-*DependencyID* - This identifier represent a single call from one component to another.  The component could be in-process or out of process.  The DependencyID is logged both in the caller and callee.
+**Application Insights Identifiers** 
+Application Insights is evolving their event correlation approach.  The following W3C standard is what they are evolving to.  
+https://w3c.github.io/distributed-tracing/report-trace-context.html
+This standard is anticipated to be complete by *December 2018*; however, they have a pull request ready.
+
+```
+From: Sergey Kanzhelev 
+Sent: Friday, July 20, 2018 11:43 AM
+To: Dave Taniguchi <Dave.Taniguchi@microsoft.com>; Nik Molnar <nimolnar@microsoft.com>
+Cc: Yochay Kiriaty <yochayk@microsoft.com>; Craig Jensen <cjensen@microsoft.com>
+Subject: RE: Bot follow up q's
+
+We are currently transitioning to W3C headers: https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945 We expect all new SDK and services will be using W3C headers by the end of the year and Request-Id will be mostly held for the back compat.
+
+I’d suggest to start with W3C now, not invest into any of existing headers.
+
+/Sergey
+```
+
+
+While the spec is being completed, we will be monitoring for adoption.  Here are some details of one of the key HTTP headers.
+```
+Example (http header)
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+
+Sections of the header:
+-----------------------------
+2HEXDIG = "00" = version
+32HEXDIG = "4bf92f3577b34da6a3ce929d0e0e4736" = trace-id =   ; 16 bytes array identifier. All zeroes forbidden
+
+16HEXDIG = "00f067aa0ba902b7" = span-id =   ; 8 bytes array identifier. All zeroes forbidden
+
+2HEXDIG = "01" = trace-options =    ; 8 bit flags. Currently only one bit is used.
+
+```
+The two things we are interested in is the span-id and trace-id.
+
+*trace-id (aka CorrelationID))* - (Wire / W3C Level) This identifier represents a single instance of processing a message.  Or conceptually, it a container that holds a graph of dependency calls (see DependencyID).  There are events that contain this identifier begining from the channel receiving a message, sending the message to the Bot Service, the Bot Service invocations of Middleware/LUIS/QNA, and the Bot Service N-reponses back to the customer.  
+*span-id (aka Component)* - (Wire/W3C Level) This identifier represents a single span within the graph of calls that make up a request.  For example, a Middleware component will have it's own span.
+*DependencyID* - (App Insights Level) This identifier represent a single call from one component to another.  Think of this as the manifestation of the trace-id and span-id stored into Application Insights.  The component could be in-process or out of process.  The DependencyID is logged both in the caller and callee.
 
 ### CustomEvent: BotMessageReceived
 
