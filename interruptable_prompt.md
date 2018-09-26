@@ -1,4 +1,4 @@
-# Bot Framework 4.1 Interruptable Prompt
+# Interruptable Prompt
 
 
 ## Summary
