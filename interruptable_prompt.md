@@ -21,12 +21,12 @@ As a analyst, I want to be able to understand where in dialog flow customers are
 As a analyst, I want the ability to see raw customer data, in order to understand what customers are seeking within the bot.
 
 
-```json
+```jscript
 {
     "version": "0.1",
     // FUTURE  - Data Driven Dialog
     "name": "greetings",
-        // /Data Driven Prompt
+        // Data Driven Prompt
         "prompts" : [
             {
                 "username_prompt" : {
