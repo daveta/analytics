@@ -2,10 +2,13 @@
 
 
 ## Summary
-Cafe Bot and Enterprise Bot  independently identified handling interruptions as an ability bots should handle.  They both solved it in a similar way using LUIS/QnA (Dispatch) to determine the customer response.  This proposes a new prompt that integrates LUIS/QnA models for assisting in interruptions and flexible data collection for model improvement, modem measurement and custom customer reports.
+Cafe and Enterprise Bot  independently are handling interruptions.  An example of an interruption is "I would like help" or "I want to cancel".  They both solved it using LUIS/QnA (Dispatch) to detect various kinds of interruptions.  This proposes a new prompt that integrates LUIS/QnA models for interruption support.  In addition proposes a flexible data collection for model improvement, model measurement and custom  reports.
+
+## Approach
+Enterprise Bot handled interruptions at a dialog level which is valid.  Cafe handled at prompt level.  This approach is taking the most granular approach.
 
 ## Developer Stories
-As a sdk user, I want to be able to handle help and cancel  in my prompts in order to provide a good customer experience.
+As a sdk user, I want to be able to handle help and cance  in my prompts in order to provide a good customer experience.
 As a sdk user, I want to be able to handle arbitrary chit chat in my prompts in order to provide a good customer experience.
 As a sdk user, I want to be able to handle other classes of responses (aggressive behavior, questioning validity of prompt, etc) in my prompts in order to provide a good customer experience.
 As a sdk user, I want to be able to integrate language models to assist in interpreting if the user is interrupting normal flow  in order to provide a good customer experience.
@@ -21,12 +24,12 @@ As a analyst, I want to be able to understand where in dialog flow customers are
 As a analyst, I want the ability to see raw customer data, in order to understand what customers are seeking within the bot.
 
 
-```json
+```json5
 {
     "version": "0.1",
     // FUTURE  - Data Driven Dialog
     "name": "greetings",
-        // /Data Driven Prompt
+        // Data Driven Prompt
         "prompts" : [
             {
                 "username_prompt" : {
