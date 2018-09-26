@@ -15,7 +15,6 @@ Assumptions/Notes:
 - Data collection is performed using Application Insights.
 - Prompts use LUIS/QnA/Dispatch.  Most likely Dispatch will be used.
 - Entities recognized will be placed in TurnContext
-- Builds on top of ComponentDialog
 - Validation is missing, but could be performed using .csx/.js/.python
 - "Training" mode could help validate and enrich the model at runtime.
 
