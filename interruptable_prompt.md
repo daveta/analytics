@@ -2,7 +2,7 @@
 
 
 ## Summary
-Cafe and Enterprise Bot  independently are handling interruptions.  An example of an interruption is "I would like help" or "I want to cancel".  They both solve it using LUIS/QnA (Dispatch) to detect distinct interruptions.  This proposes a new prompt that integrates LUIS/QnA models for interruption support.  In addition, this proposes a flexible data collection for model improvement, model measurement and custom reports.
+Cafe and Enterprise Bot  are handling interruptions in similar but differen ways.  An example of an interruption is "I would like help" or "I want to cancel".  Both solutions use LUIS/QnA (Dispatch) to detect interruptions.  This proposes a new prompt that integrates LUIS/QnA models for interruption support.  In addition, this proposes a flexible data collection for model improvement, model measurement and custom reports.
 
 Note:
 Enterprise Bot handles interruptions at a dialog level.  Cafe handled at prompt level.  This approach is taking the most granular approach using prompts.
