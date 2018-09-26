@@ -2,13 +2,14 @@
 
 
 ## Summary
-Cafe and Enterprise Bot  independently are handling interruptions.  An example of an interruption is "I would like help" or "I want to cancel".  They both solved it using LUIS/QnA (Dispatch) to detect various kinds of interruptions.  This proposes a new prompt that integrates LUIS/QnA models for interruption support.  In addition proposes a flexible data collection for model improvement, model measurement and custom  reports.
+Cafe and Enterprise Bot  independently are handling interruptions.  An example of an interruption is "I would like help" or "I want to cancel".  They both solve it using LUIS/QnA (Dispatch) to detect distinct interruptions.  This proposes a new prompt that integrates LUIS/QnA models for interruption support.  In addition, this proposes a flexible data collection for model improvement, model measurement and custom reports.
 
-## Approach
-Enterprise Bot handled interruptions at a dialog level which is valid.  Cafe handled at prompt level.  This approach is taking the most granular approach.
+Note:
+Enterprise Bot handles interruptions at a dialog level.  Cafe handled at prompt level.  This approach is taking the most granular approach using prompts.
 
 ## Developer Stories
-As a sdk user, I want to be able to handle help and cance  in my prompts in order to provide a good customer experience.
+As a sdk user, I want to be able to handle cancel  in my prompts in order to provide a good customer experience.
+As a sdk user, I want to be able to handle help  in my prompts and provide prompt-specific guidance in order to provide a good customer experience.
 As a sdk user, I want to be able to handle arbitrary chit chat in my prompts in order to provide a good customer experience.
 As a sdk user, I want to be able to handle other classes of responses (aggressive behavior, questioning validity of prompt, etc) in my prompts in order to provide a good customer experience.
 As a sdk user, I want to be able to integrate language models to assist in interpreting if the user is interrupting normal flow  in order to provide a good customer experience.
@@ -19,10 +20,16 @@ As a sdk user, I want the ability to the language understanding models to update
 As a analyst, I want the ability modify the way the data is stored in order to construct the correct queries for reports.
 
 ## Business Stories
+As a analyst, I want to be able to correlate all my data together within a turn.
 As a analyst, I want to be able to create dialog level data together easily in order to construct dialog-level reports.
 As a analyst, I want to be able to understand where in dialog flow customers are not responding in order to understand my customer behavior and modify my prompts.
 As a analyst, I want the ability to see raw customer data, in order to understand what customers are seeking within the bot.
 
+Below is a proposal of how a prompt (and future dialog) could be defined using a data definition.  Here are some assumptions::
+- Data collection is performed using Application Insights.
+- Prompts use LUIS/QnA/Dispatch.  Most likely Dispatch will be used.
+- Entities recognized will be placed in TurnContext
+- Builds on top of ComponentDialog
 
 ```json5
 {
@@ -36,8 +43,8 @@ As a analyst, I want the ability to see raw customer data, in order to understan
                     "prompt" : "What is your name?",
                     "type" : "string",
                     // FUTURE - Pre/post hook scripts.
-                    "prevalidator" : "<.csx/.js/.python reference>",
-                    "postvalidator" : "<.csx/.js/.python> reference",
+                    "prerecognize" : "<.csx/.js/.python reference>",
+                    "postrecognize" : "<.csx/.js/.python> reference",
                     // runmode [Training | Dev | None]
                     "runmode" : "confirm",
                     // Dispatch/QnA/LUIS first class with prompt.
