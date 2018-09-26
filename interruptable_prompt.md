@@ -48,7 +48,7 @@ Below is a proposal of how a prompt (and future dialog) could be defined using a
                     // runmode [Training | Dev | None]
                     "runmode" : "confirm",
                     // Dispatch/QnA/LUIS first class with prompt.
-                    "models": [
+                    "model": [
                         {
                             "usernameDispatcher" : {
                                 "type":"luis",
