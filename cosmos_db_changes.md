@@ -65,12 +65,12 @@ Each of the state providers store the same payload, the only difference is the k
 
 ## Indexing
 Our query usage is very key-value oriented.  A user begins a conversation, and retrieves a UserState and/or ConversationState.  There are no scenarios where we query patterns within the Document payload.
-- Exclude (/document/*)
+- **Exclude (/document/*)**
 Exclude the entire Document path from being index.  Customers with query patterns within Document can override with a custom State provider.
-- Index precision: -1
+- **Index precision: -1**
 Keep consistent index precision.
 ## Consistency
-- Session
+- **Session**
 CosmosDB have devised some preset models that predefine system behavior to address CAP theorem tradeoffs.  Session level consistency matches our pattern, where primarily a client that reads and writes on the same thread guarantees consistency, with relatively lower guarantees across region.  It does maintain order.  
 ## Partitioning
 We can define a partioning key based on the storage key.  This will result in a single row per key, but apparently doesn't present a problem for Cosmos.
@@ -79,7 +79,7 @@ The customer is in control of how many databases.  We can  recommend a single da
 ## TTL (Stretch)
 This is something that Vishwac is interested in, Cosmos supports aging out data.  We would most likely want more expressive SDK primitives across all languages (ie, attributes).
 ## Permissions
-We will employ a single resource key for all users.
+We will employ a single resource key for all users to perform read/write storage operations.
 ## Multi-tenancy considerations
 We are using Multiple Users <=>Single Collection model.  Customers can deploy different models if they so desire.
 
