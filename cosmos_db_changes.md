@@ -1,7 +1,7 @@
 # Cosmos DB support Bot Framework Storage Changes
 
 ## Summary
-Currently, the Bot Framework v4.0 has a Cosmos DB storage provider that enables customers to store state.  This proposes changes we make to the implementation. The changes described here are more about tuning and does not address the overall bot contract with storage.  These should provide some optimizations and better scalability for our customers solutions.
+Currently, the Bot Framework v4.0 has a Cosmos DB storage provider that enables customers to store state.  This proposes changes to our implementation around tuning and scalability.  This does not address the overall bot contract with storage. 
 
 ## Background
 For reference, this is what we currently store within CosmosDB.
@@ -36,7 +36,15 @@ For reference, this is what we currently store within CosmosDB.
             public string ETag { get; set; }
         }
 ```
-We ship two common Storage providers for User and Conversation state.  In addition, customers can add custom storage providers.
+We ship two common Storage providers:
+
+- UserState
+
+- ConversationState
+
+In addition, customers can add custom storage providers.
+
+Each of the state providers store the same payload, the only difference is the key they use.
 
 ```csharp
  // (Rougly)  The key for User State 
