@@ -12,43 +12,53 @@ Below is a proposal of how a prompt (and future dialog) could be defined using a
 
 Assumptions/Notes:
 
-- Data collection is performed using Application Insights.
-- Prompts use LUIS/QnA/Dispatch.  Most likely Dispatch will be used.
-- Entities recognized will be placed in TurnContext
-- Validation is missing, but could be performed using .csx/.js/.python
+- Data collection (Telemetry) is performed using Application Insights.
+- Prompts use LUIS/QnA/Dispatch to detect interruptions.
+- Entities recognized will be returned back to underlying caller (dialog). 
 - "Training" mode could help validate and enrich the model at runtime.
+- Matching Entities enable automatic LUIS entity detection for prompt and enables updates for other entities.
 
 Below  is how a prompt ("username_prompt") might be defined. 
 
 ```json5
- "username_prompt" : {
-   "prompt" : "What is your name?",
-   "type" : "string",
-    // FUTURE - Pre/post hook scripts.
-   "prerecognize" : "<.csx/.js/.python reference>",
-   "postrecognize" : "<.csx/.js/.python> reference",
-    // runmode [Training | Dev | None]
-    "runmode" : "training",
-     // Dispatch/QnA/LUIS first class with prompt.
-     "model": {
-          "usernameDispatcher" : {
-            "type":"luis",
-             "description": "Common model",
-             "location" : "<model file>"
-           }
-      }
-      
-       // Data collection first class with prompt.
-    "data_capture" : [
-        {
-            "custom_event_name": "custom1",
-            "fields": ["activity.ActivityId", "luis.usernameDispatcher.Topintent", "luis.usernameDispatcher.Entities"]
-        },
-        { 
-            "custom_event_name": "top_intent_activity",
-            "fields": ["activity.ActivityId", "prompt.Value", "common.datetime"]
-        }
+ {
+  "name": "username_prompt",
+  "prompt": "What is your name?",
+  // type : [ string | int ]
+  "type": "string",
+
+  // run_mode [training | dev | none]
+  "run_mode": "none",
+
+  // Dispatch/QnA/LUIS first class with prompt.
+  "model": {
+    "name": "getUserProfile",
+    "type": "luis",
+    "description": "Common model",
+    "matching_entities": [ "userName_patternAny", "userName" ]
+  },
+
+  // Data collection at prompt.
+  "telemetry": [
+    {
+      "custom_event_name": "custom1",
+      "fields": [
+        "Activity.LocalTimestamp",
+        "Activity.Id as activityid",
+        "Activity.Text as msg",
+        "RecognizerResult.Intents as intents"
+      ]
+    },
+    {
+      "custom_event_name": "top_intent_activity",
+      "properties": [
+        "Activity.LocalTimestamp",
+        "Activity.Id",
+        "Prompt.Value"
+      ]
     }
+  ]
+}
 ```
 And could orchestrate into a dialog which could facilitate data collection across prompts:
 
