@@ -3,6 +3,15 @@
 
 The Bot Framework can use the  Application Insights telemetry to provide information about how your bot is performing, and track key metrics. 
 
+## Table of Contents
+[Install Application Insights](## Install Application Insights)
+[Disabling Application Insights](### Disabling Application Insights)
+[Configuring LUIS Sentiment](### Configuring Sentiment)
+[Application Insights Queries](## Application Insights Queries)
+[Troubleshooting](## Troubleshooting)
+
+
+
 ## Install Application Insights
 Application Insights must be created before the bot is deployed, since configuration strings must be provided to the bot in the form of the [Bot Configuration] file.   
 
@@ -27,8 +36,6 @@ To turn off Application Insights logging for C#, open up the `Startup.cs` file a
             // var configuration = app.ApplicationServices.GetService<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>();
             // configuration.DisableTelemetry = true;
 ```
-
-
 
 
 
@@ -109,3 +116,15 @@ The samples provide a PowerBI report that can be used to understand how the bot 
 ### Word Cloud
 ![Example Report](powerbi_wordcloud.PNG)
 
+## Troubleshooting
+### I am not seeing all event types.
+In C# ASP.Net Core, ensure the `appsettings.json` file contains an `InstrumentationKey`:
+```json
+ {
+  "botFilePath": "Mybot.bot",
+  "botFileSecret": "MySecret",
+  "ApplicationInsights": {
+    "InstrumentationKey": "<MyAppInsights_key>"
+  }
+}
+```
