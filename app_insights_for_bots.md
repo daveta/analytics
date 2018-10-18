@@ -8,6 +8,7 @@ The Bot Framework can use the  Application Insights telemetry to provide informa
 - [Disabling Application Insights](#disabling-application-insights)
 - [Configuring LUIS Sentiment](#configuring-sentiment)
 - [Application Insights Queries](#application-insights-queries)
+- [Power BI Report](#power-bi)
 - [Troubleshooting](#troubleshooting)
 
 
