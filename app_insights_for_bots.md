@@ -100,7 +100,12 @@ dependencies
 ```
 
 ## Power BI
-The samples provide a PowerBI report that can be used to understand how the bot is performing.  Here are some sample pages of the report.
+The samples provide a PowerBI template  that can be used to understand how the bot is performing. 
+The Power BI template is located under the following folder: 
+
+`Middleware\Telemetry\ExamplePowerBIDashboard.pbit`
+
+Below are some sample pages of the report.
 
 ### Overall Usage
 ![Example Report](powerbi_overall.PNG)
