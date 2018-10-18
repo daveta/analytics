@@ -16,6 +16,22 @@ Blah, blah
 
 
 
+### Disabling Application Insights
+
+To turn off Application Insights logging for C#, open up the `Startup.cs` file and uncomment the following lines:
+
+```csharp
+       public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            // Uncomment to disable Application Insights.
+            // var configuration = app.ApplicationServices.GetService<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>();
+            // configuration.DisableTelemetry = true;
+```
+
+
+
+
+
 ### Configuring Sentiment
 LUIS enables sentiment to be logged.  This can be enabled through the [LUIS portal](https://www.luis.ai).
 Sentiment is enabled for each application.  To enable sentiment, log in to the portal, select "My Apps" , click on the specific application you want to enable sentiment.
