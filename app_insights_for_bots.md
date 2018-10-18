@@ -4,11 +4,11 @@
 The Bot Framework can use the  Application Insights telemetry to provide information about how your bot is performing, and track key metrics. 
 
 ## Table of Contents
-[Install Application Insights](## Install Application Insights)
-[Disabling Application Insights](### Disabling Application Insights)
-[Configuring LUIS Sentiment](### Configuring Sentiment)
-[Application Insights Queries](## Application Insights Queries)
-[Troubleshooting](## Troubleshooting)
+[Install Application Insights](##install-application-insights)
+[Disabling Application Insights](###disabling-application-insights)
+[Configuring LUIS Sentiment](###configuring-sentiment)
+[Application Insights Queries](##application-insights-queries)
+[Troubleshooting](##troubleshooting)
 
 
 
