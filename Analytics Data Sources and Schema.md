@@ -8,7 +8,7 @@ This is primarily focused on capturing events that occur after the customer Bot 
 ![Summary of data sources](https://raw.githubusercontent.com/daveta/analytics/master/AnalyticsDataSources.png)
 
 ## Background
-Today the Bot developer can opt into purchasing Application Insights for their subscription. Currently, the Connector Service will log events for Exceptions and Custom Events for messages received.  The Bot Framework SDK is adopting this Application Insights infrastructure for Bot Analytics.    Adopting Application Insights means adopting their data model. 
+Today the Bot developer can opt into purchasing Application Insights for their subscription. Currently, the Connector Service will log events for Exceptions and Custom Events for messages received.  The Bot Framework SDK is adopting this Application Insights infrastructure for Bot Analytics.    Adopting Application Insights means adopting their data model *to a limited degree*.
 
 ```https://docs.microsoft.com/en-us/azure/application-insights/application-insights-data-model```
 
@@ -25,109 +25,55 @@ There are several correlating concepts identifiers that are being employed at tw
 *ReplyID* - When a Bot responds to a message, the ReplyID is the ActivityID of the original message.
 *ConversationID* - Channel-specific representation of a conversation. 
 
-**Application Insights Identifiers** 
-Application Insights is evolving their event correlation approach.  The following W3C standard is what they are evolving to.  
-https://w3c.github.io/distributed-tracing/report-trace-context.html
-This standard is anticipated to be complete by *December 2018*; however, they have a pull request ready.
+**Application Insights Identifiers and Other Frameworks** 
+- Application Insights is evolving their event correlation approach.  The following W3C standards is what they are evolving to.  As of Summer 2018, Application Insights has pushed in a PR that adopts this. (https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945)
 
-```
-From: Sergey Kanzhelev 
-Sent: Friday, July 20, 2018 11:43 AM
-To: Dave Taniguchi <Dave.Taniguchi@microsoft.com>; Nik Molnar <nimolnar@microsoft.com>
-Cc: Yochay Kiriaty <yochayk@microsoft.com>; Craig Jensen <cjensen@microsoft.com>
-Subject: RE: Bot follow up q's
+o	https://w3c.github.io/distributed-tracing/report-trace-context.html
+o	https://w3c.github.io/distributed-tracing/report-correlation-context.html
 
-We are currently transitioning to W3C headers: https://github.com/Microsoft/ApplicationInsights-dotnet-server/pull/945 We expect all new SDK and services will be using W3C headers by the end of the year and Request-Id will be mostly held for the back compat.
+This standard is anticipated to be complete by *December 2018*.
 
-I’d suggest to start with W3C now, not invest into any of existing headers.
-
-/Sergey
-```
-
-
-While the spec is being completed, we will be monitoring for adoption.  Here are some details of one of the key HTTP headers.
-```
-Example (http header)
-traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
-
-Sections of the header:
------------------------------
-2HEXDIG = "00" = version
-32HEXDIG = "4bf92f3577b34da6a3ce929d0e0e4736" = trace-id =   ; 16 bytes array identifier. All zeroes forbidden
-
-16HEXDIG = "00f067aa0ba902b7" = span-id =   ; 8 bytes array identifier. All zeroes forbidden
-
-2HEXDIG = "01" = trace-options =    ; 8 bit flags. Currently only one bit is used.
-
-```
-The two things we are interested in is the span-id and trace-id.
-
-*trace-id (aka CorrelationID))* - (Wire / W3C Level) This identifier represents a single instance of processing a message.  Or conceptually, it a container that holds a graph of dependency calls (see DependencyID).  There are events that contain this identifier begining from the channel receiving a message, sending the message to the Bot Service, the Bot Service invocations of Middleware/LUIS/QNA, and the Bot Service N-reponses back to the customer.  
-*span-id (aka Component)* - (Wire/W3C Level) This identifier represents a single span within the graph of calls that make up a request.  For example, a Middleware component will have it's own span.
-*DependencyID* - (App Insights Level) This identifier represent a single call from one component to another.  Think of this as the manifestation of the trace-id and span-id stored into Application Insights.  The component could be in-process or out of process.  The DependencyID is logged both in the caller and callee.
+- The Codex team (which builds cV or "Correlation Vector") is a formerly internal-only effort (announced as an Open Source project on Oct 1, 2018) is another framework.  They are  working towards interoperability with the above W3C standards.  We don't have any integration with cV.
+https://github.com/Microsoft/CorrelationVector
 
 ### CustomEvent: BotMessageReceived
+**Logged From:** TelemetryLoggerMiddleware
 
-Currently the TranscriptLoggerMiddleware logs entire Activity objects to storage, including when new Activity objects are received.  We will leverage the existing infrastructure to log the BotMessageReceived object into Application Insights.  
-
+- ActivityID
 - Channel  (Source channel - e.g. Skype, Cortana, Teams)
-- Text (Contents of the message - may not be populated in extreme circumstances where the customer has asked us not to)
+- Text (Optional for PII)
 - FromId
 - FromName
+- RecipientId
+- RecipientName
 - ConversationId
 - ConversationName
-- Sentiment (optional but should be there in most cases)
 - Locale
-- Language
-- ClientInfo (most channels will provide this and contents will vary). Skype consumer only has locale, webchat has none, etc.
-	○ Here is an example from Teams
-	{
-	  "locale": "en-GB",
-	  "country": "GB",
-	  "platform": "Windows"
-	}
+
+### CustomEvent: LuisIntent.INENTName
+**Logged From:** TelemetryLuisRecognizer
+
 - ActivityID
 - CorrelationID
-
-
-Intent.INTENTName
-### CustomEvent: Luis Intent
-
-The LUIS Recognizer will use the existing infrastructure to log Trace Activity events.  Currently, Trace Activity events are logged by the TranscriptLoggerMiddleware and consumed by the Emulator.  This infrastructure will be leveraged to log into Application Insights.
-
-**Name of Event**: Intent.INTENTName
-
-Every LUIS Intent hit will result in an Application Insights event being created. This event is called: Intent.INTENTNAME. It will have the following custom dimensions:
-
-- Score
+- Intent
+- IntentScore
 - Question
-- ConversationId (for correlation purposes)
+- ConversationId
+- SentimentLabel
+- SentimentScore
+
+### QnAMessage
+** Logged From:** TelemetryQnaMaker
+
 - ActivityID
 - CorrelationID
-
-
-
-### Unknown Question
-If a question goes to a Knowledge Source (QnA Maker) an event will be raised to track this including information to help you understand if we found something for the user or if we didn't. 
-
-The QNAMaker Recognizer will fire Trace Activities that will feed the necessary data.
-
-**Name of Event**: UnknownQuestion
-
-If we found knowledge the following custom dimensions will be added
-
+- Username
+- ConversationId
+- OriginalQuestion
 - Question
-- FoundInKnowledgeSource - set to true
-- UserAcceptedAnswer (if the user provided feedback and the developer asked the user) set to true or false based on feedback
-- ActivityID
-- CorrelationID
+- Answer
+- Score (*Optional*: if we found knowledge)
 
-If we did *not* find knowledge for the user the following custom dimensions will be added:
-
-- Question
-- FoundInKnowledgeSource - set to false
-- KnowledgeItemsDiscarded - if we find items but discard them because the score is too low we add these to help with diagnosis. RecordID and Title will be provided
-- Will be provided in the format of ID=Title,ID=Title,ID=Title
 
 ### Dependency
 Understanding flow between components is a primary scenario that our customers are interested in. Application Insights has a concept of a dependency that allows you to track a single operation that is serviced by multiple components.  
