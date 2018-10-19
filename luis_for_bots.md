@@ -1,13 +1,13 @@
-# Setting up LUIS for Bot Framework
+# Provision LUIS for Bot Framework
 
 [LUIS](https://www.luis.ai/) is a machine learning-based service to build natural language applications.  Bots can use LUIS to help with language understanding.
 
 Setting up LUIS can be performed in two ways:
-- [Set up LUIS with MsBot](#set-up-luis-with-msbot) (Preferred method)
-- [Set up LUIS with the Azure Portal](#set-up-luis-with-the-azure-portal)
+- [Provision LUIS with MsBot](#provision-luis-with-msbot) (Preferred method)
+- [Provision LUIS with the Azure Portal](#provision-luis-with-the-azure-portal)
 
 
-## Set up LUIS with MsBot
+## Provision LUIS with MsBot
 MsBot is a command line tool that manages Bot Framework projects that use Azure.   When setting up LUIS, we demonstrate the MsBot `clone` command which takes a `.recipe` (json) file and deploys the project to Azure.  See [MsBot](https://github.com/Microsoft/botbuilder-tools/tree/master/packages/MSBot) for more details.
 
 ### Install on Windows or macOS
@@ -81,10 +81,10 @@ Your project may be configured to rely on this secret and you should update it a
     "botFileSecret": "<bot secret>"
 }
 ```
-## Set up LUIS with the Azure Portal
+## Provision LUIS with the Azure Portal
 
-## Prerequisites
-### Set up LUIS
+
+## Set up LUIS
 - Navigate to [LUIS portal](https://www.luis.ai).
 - Click the `Sign in` button.
 - Click on `My Apps`.
