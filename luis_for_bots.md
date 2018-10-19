@@ -3,7 +3,7 @@
 [LUIS](https://www.luis.ai/) is a machine learning-based service to build natural language applications.  Bots can use LUIS to help with language understanding.
 
 Setting up LUIS can be performed in two ways:
-- [Set up LUIS with MsBot](#set-up-luis-with-msbot)
+- [Set up LUIS with MsBot](#set-up-luis-with-msbot) (Preferred method)
 - [Set up LUIS with the Azure Portal](#set-up-luis-with-the-azure-portal)
 
 
