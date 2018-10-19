@@ -1,4 +1,4 @@
-# Application Insights for Bots
+# Setting up Application Insights for Bot Framework
 [Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) is a Azure service which enables analytics about your applications, infrastructure and network.
 
 The Bot Framework can use the  Application Insights telemetry to provide information about how your bot is performing, and track key metrics. 
