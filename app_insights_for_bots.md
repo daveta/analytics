@@ -1,48 +1,33 @@
-# Setting up Application Insights for Bot Framework
+# Application Insights Telemetry for Bots
 [Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) is a Azure service which enables analytics about your applications, infrastructure and network.
 
 The Bot Framework can use the  Application Insights telemetry to provide information about how your bot is performing, and track key metrics. 
 
+The Bot Framework SDK ships with several samples that demonstrate how to add telemetry to your bot and produce reports (included).
+
 ## Table of Contents
-- [Install Application Insights](#install-application-insights)
-- [Disabling Application Insights](#disabling-application-insights)
+- [Provision Application Insights](#provision-application-insights)
 - [Configuring LUIS Sentiment](#configuring-sentiment)
 - [Application Insights Queries](#application-insights-queries)
 - [Power BI Report](#power-bi)
 - [Using Application Insights in Visual Studio](#using-application-insights-in-visual-studio)
+- [Disabling Application Insights](#disabling-application-insights)
 - [Troubleshooting](#troubleshooting)
 
-
-
 ## Provision Application Insights
-The Application Insights service must be created before the bot is deployed, since configuration strings must be provided to the bot in the form of the Bot Configuration file. 
-Application Inisghts can be set up through the Azure Portal.  
-
-## Install the Application Insights SDK
-https://github.com/Microsoft/ApplicationInsights-Home
+The Application Insights service must be created before the bot is deployed, since configuration strings must be provided to the Bot Configuration file. 
+Application Insights can be provisioned through the [Azure Portal](https://portal.azure.com) or through the [MsBot tool](https://github.com/Microsoft/botbuilder-tools/tree/master/packages/MSBot).
 
 
 ### Deployment using the MsBot command line tool
-The MsBot tool blah blah
+<To be added>
 
 ### Deployment using the Azure Portal
 The Azure portal can be used to deploy your Application Insights using the Azure Portal.  You may choose this option if you already have an existing Application Insights deployment or you want to place Application Insights into a separate Azure Resource Group.
 
-Blah, blah
+<To be added>
 
 
-
-### Disabling Application Insights
-
-To turn off Application Insights logging for C#, open up the `Startup.cs` file and uncomment the following lines:
-
-```csharp
-       public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-        {
-            // Uncomment to disable Application Insights.
-            // var configuration = app.ApplicationServices.GetService<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>();
-            // configuration.DisableTelemetry = true;
-```
 
 
 
@@ -135,6 +120,19 @@ Within Visual Studio, Application Insights events can be queried in the "Applica
 Clicking on "Track Operation" on the details of any event can give you a visualization of where time is being spent, using the events in the telemetry that are automatically correlated:
 ![Example Track Operation](visualstudio_trackoperation.PNG)
 With this view, you can quickly understand where time is being spent within your bot.
+
+## Disabling Application Insights
+
+To turn off Application Insights logging for C#, open up the `Startup.cs` file and uncomment the following lines:
+
+```csharp
+       public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            // Uncomment to disable Application Insights.
+            // var configuration = app.ApplicationServices.GetService<Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration>();
+            // configuration.DisableTelemetry = true;
+```
+
 
 ## Troubleshooting
 
