@@ -9,12 +9,18 @@ The Bot Framework can use the  Application Insights telemetry to provide informa
 - [Configuring LUIS Sentiment](#configuring-sentiment)
 - [Application Insights Queries](#application-insights-queries)
 - [Power BI Report](#power-bi)
+- [Using Application Insights in Visual Studio](#using-application-insights-in-visual-studio)
 - [Troubleshooting](#troubleshooting)
 
 
 
-## Install Application Insights
-Application Insights must be created before the bot is deployed, since configuration strings must be provided to the bot in the form of the [Bot Configuration] file.   
+## Provision Application Insights
+The Application Insights service must be created before the bot is deployed, since configuration strings must be provided to the bot in the form of the Bot Configuration file. 
+Application Inisghts can be set up through the Azure Portal.  
+
+## Install the Application Insights SDK
+https://github.com/Microsoft/ApplicationInsights-Home
+
 
 ### Deployment using the MsBot command line tool
 The MsBot tool blah blah
@@ -122,8 +128,18 @@ Below are some sample pages of the report.
 ### Word Cloud
 ![Example Report](powerbi_wordcloud.PNG)
 
+
+## Using Application Insights in Visual Studio
+Within Visual Studio, Application Insights events can be queried in the "Application Insights Search" window.  [For more details, see the Application Insights documentation](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-diagnostic-search).
+![Example Visual Studio Session](visualstudio_appinsights.PNG)
+Clicking on "Track Operation" on the details of any event can give you a visualization of where time is being spent, using the events in the telemetry that are automatically correlated:
+![Example Track Operation](visualstudio_trackoperation.PNG)
+With this view, you can quickly understand where time is being spent within your bot.
+
 ## Troubleshooting
+
 ### I am not seeing all event types.
+
 In C# ASP.Net Core, ensure the `appsettings.json` file contains an `InstrumentationKey`:
 ```json
  {
