@@ -4,10 +4,11 @@
 
 ## Priority 0: Address Bot Channel Service Top 4 Scenarios
 We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the **top issues** that cover a high percentage (80%+?) of issues encountered by customers bots through the lens of the Channel Service:
-o	500 errors on bot 
-o	Timeout (from channel to bot)
-o	Bot Never responds 
-o	Bot works in ABS (Web Chat Test) but doesn’t work in channel X
+
+- 500 errors on bot 
+- Timeout (from channel to bot)
+- Bot Never responds 
+- Bot works in ABS (Web Chat Test) but doesn’t work in channel X
 
 In order to help customers quickly diagnose these issues (and enable UI/tools to surface to customers), the approach is to enable Application Insights for the Bot and beef up event data sent from the Channel Service (into the customer's Application Insights container) to completely diagnose issues.
 
