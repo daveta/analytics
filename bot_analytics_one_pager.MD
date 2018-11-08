@@ -1,6 +1,6 @@
-# Bot Analytics v4.2
+# Bot Analytics v4.2 Proposal
 
-Here is a ~"one" pager that proposes Bot Analytics for the v4.2 release.
+
 
 ## Priority 0: Address Bot Channel Service Top 4 Scenarios
 We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the **top issues** that cover a high percentage (80%+?) of issues encountered by customers bots through the lens of the Channel Service:
@@ -11,7 +11,11 @@ o	Bot works in ABS (Web Chat Test) but doesn’t work in channel X
 
 In order to help customers quickly diagnose these issues (and enable UI/tools to surface to customers), the approach is to enable Application Insights for the Bot and beef up event data sent from the Channel Service (into the customer's Application Insights container) to completely diagnose issues.
 
-Here is the proposal:
+
+
+Here is the proposal (**Note:** Ownership is shared across teams):
+
+
 
 Item |Owner | Description
 --- | --- | ---
@@ -22,7 +26,7 @@ Ensure Request/Dependency/Event/Trace telemetry being logged in Bot and correlat
 Ensure ILogger telemetry being logged in Application Insights Trace | daveta | Application Insights has ability to intercept ILogger events. 
 [Log Http Status code](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25691) | Bot Service Team | To diagnose 500 errors on bot.
 [Log error on Channels into customer App Insights container](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25692) | Bot Service Team | To diagnose never respond errors, and Channel X errors
-Queries/Documentation to detect 500 errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  For true "500" bot errors, this can be done with existing tools.  For Channel "500" errors, this will be a little more difficult depending where it fails within the channel.
+Queries/Documentation to detect 500 errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  For true "500" bot errors, we can demonstrate with existing tools and some queries.  For Channel "500" errors, this will be a little more difficult depending where it fails within the channel. *(Stretch)* If 500 error is due to external dependency, clearly state the dependency and timeout in a query result.  For example, if CosmosDB is timing out, it should state so.
 Queries/Documentation to detect Bot Timeout errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
 Queries/Documentation to detect Bot Never Responds errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
 Queries/Documentation to detect Bot Works in Web Chat but not in Channel X | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
