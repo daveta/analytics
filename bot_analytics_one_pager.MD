@@ -50,7 +50,7 @@ Bot Message Middleware | Sample | See LUIS recognizer above.
 ### Priority 1: Satisfy Virtual Assistant scenarios
 See [nice writeup from Virtual Assistant team](https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fmicrosoft-my.sharepoint.com%2F%3Ap%3A%2Fp%2Fsrmallan%2FETf7DjcCRKRNvumlc5Ezx0EB2cTn6EYI8p_UrWOus6Q2pA%3Fe%3D15m8a5&data=02%7C01%7Cdewainr%40microsoft.com%7C619bfe4ba5f4476fbfb508d63ea97129%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636765294804345126&sdata=lJHT8yLGmV56L%2BktJ9IeYw0r5jhCVXeCi%2BNeglEQZ8o%3D&reserved=0) about the metrics they would like.
 
-This should manifest as a PowerBI Template.
+
 
 Item |Deliverable | Description
 --- | --- | ---
@@ -64,6 +64,7 @@ Build PowerBI Template | Sample | New reports showing off metrics
 ### Priority 2: Enable close-the-loop scenarios for LUIS
 
 LUIS team very interested in making a SAT/DSAT detector, segmentation/ recommender/etc.
+
 Item |Deliverable | Description
 --- | --- | ---
 Baseline | Design Doc | Identification of apps we could use and collect/retain logs
