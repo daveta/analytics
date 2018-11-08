@@ -3,7 +3,7 @@
 
 
 ## Priority 0: Address Bot Channel Service Top 4 Scenarios
-We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the **top issues** that cover a high percentage of issues encountered by customers bots through the lens of the Channel Service:
+We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the **top issues** that cover a high percentage of issues encountered by customers' bots through the lens of the Channel Service:
 
 - 500 errors on bot 
 - Timeout (from channel to bot)
@@ -15,6 +15,10 @@ In order to help customers quickly diagnose these issues (and enable UI/tools to
 
 
 Here is the proposal (**Note:** Ownership is shared across teams):
+
+
+
+(This proposal was sent to Yochay/DanDris/Artur/Carlos/etc on a different thread)
 
 
 
