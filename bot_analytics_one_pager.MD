@@ -34,15 +34,18 @@ Queries/Documentation to detect Bot Works in Web Chat but not in Channel X | dav
 See [the list of reports that should be enabled for bots](https://github.com/daveta/analytics/blob/master/app_insights_for_bots.md) by enabling Application Insights.
 
 Here is the proposal:
+
+
+
 Item |Deliverable | Description
 --- | --- | ---
 Simplify Application Insights registration for Bot | Product | Application Insights is a train wreck configuring.  Customers need carnal knowledge of their startup sequences which is terrible.  Create a platform-level appropriate integration for ASP.Net Core/WebAPI/Node.js.  Should be usable with MVC patterns.  
 Simple Disable of Application Insights | Product (Docs/Samples) | Disabling Application Insights should be simple (ideally single line) and any telemetry within the product should honor it.
 AppInsight UserID/SessionID uses Bot UserID/SessionID | Product | Modifying the events to use Bot level user/session ID's enables other Application Insights reports such as "Funnel"
-LUIS Recognizer Data Collection | Sample | Keep a sample until such time that we have  either of the following:  **(A)** A reasonable understanding of  reporting scenarios that will satisfy 90% of reports to feel comfortable hard coding the data being retrieved. ** (B)** we create a flexible/configuration-based method of collecting data.  (See below).  By choosing a sample, we won't be addressing endless customer enhancement issues of "Please add property X in LUIS intent data collection because I need it for my report".  The customer can modify for their report themselves.
+LUIS Recognizer Data Collection | Sample | Keep a sample until such time that we have  either of the following:  **(A)** A reasonable understanding of  reporting scenarios that will satisfy 90% of reports to feel comfortable hard coding the data being retrieved. **(B)** we create a flexible/configuration-based method of collecting data.  (See below).  By choosing a sample, we won't be addressing endless customer enhancement issues of "Please add property X in LUIS intent data collection because I need it for my report".  The customer can modify for their report themselves.
 QnA Recognizer Data Collection | Sample | See LUIS recognizer above.
 Bot Message Middleware | Sample | See LUIS recognizer above.
-(Stretch) Configuration-based mapping collector | Product |A configuration-based method of specifying which properties to pull from specific objects would allow customers flexibility to change the properties being logged, and where the properties will be logged (scoped within the Application Insights Custom Events and Custom Metrics).
+(Stretch) Configuration-based mapping collector | Product |A configuration-based method of specifying which properties to pull from specific objects would allow customers flexibility to change the properties being logged, and where the properties will be logged (scoped within the Application Insights Custom Events and Custom Metrics).  Should support 1:M relationships.
 
 ### Priority 1: Satisfy Virtual Assistant scenarios
 See [nice writeup from Virtual Assistant team](https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fmicrosoft-my.sharepoint.com%2F%3Ap%3A%2Fp%2Fsrmallan%2FETf7DjcCRKRNvumlc5Ezx0EB2cTn6EYI8p_UrWOus6Q2pA%3Fe%3D15m8a5&data=02%7C01%7Cdewainr%40microsoft.com%7C619bfe4ba5f4476fbfb508d63ea97129%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636765294804345126&sdata=lJHT8yLGmV56L%2BktJ9IeYw0r5jhCVXeCi%2BNeglEQZ8o%3D&reserved=0) about the metrics they would like.
