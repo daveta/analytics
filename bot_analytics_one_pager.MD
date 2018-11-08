@@ -1,15 +1,68 @@
 # Bot Analytics v4.2
 
-## Priority 0: DanDris Scenarios
-We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the top issues encountered by customers bots with respect to the Channel Service:
-o	500 errors on bot
+Here is a ~"one" pager that proposes Bot Analytics for the v4.2 release.
+
+## Priority 0: Address Bot Channel Service Top 4 Scenarios
+We regularly receive issues about bots having issues and customers are left scratching their heads.  The following are considered the **top issues** that cover a high percentage (80%+?) of issues encountered by customers bots through the lens of the Channel Service:
+o	500 errors on bot 
 o	Timeout (from channel to bot)
 o	Bot Never responds 
 o	Bot works in ABS (Web Chat Test) but doesn’t work in channel X
 
-In order to help customers quickly diagnose these issues (and enable UI/tools to surface to customers), the approach is to enable Application Insights for the Bot and leverage tracing from the Channel Service to completely diagnose the issues.
+In order to help customers quickly diagnose these issues (and enable UI/tools to surface to customers), the approach is to enable Application Insights for the Bot and beef up event data sent from the Channel Service (into the customer's Application Insights container) to completely diagnose issues.
 
-|--|--|
+Here is the proposal:
+
+Item |Owner | Description
+--- | --- | ---
+[Enable ABS to enable Application Insights](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25693) | Bot Portal Team | Currently, if you provision a bot through the portal and opt into Application Insights and deploy  the ABS template, Application Insights is not configured correctly.  The portal team believes there's a way to enable this (bot configuration and appsettings.json)
+[Enable W3C distributed tracing](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25537) | Bot Service Team | To correlate queries with Bot application insights 
+Verify integration with Distributed Tracing | daveta/Bot Service Team | Need to test and verify operation id's are being transferred and correlated correctly.  Ideally we set up an integration environment for testing.
+Ensure Request/Dependency/Event/Trace telemetry being logged in Bot and correlated | daveta | Ensure the appropriate initializers installed.
+Ensure ILogger telemetry being logged in Application Insights Trace | daveta | Not 100% required, but nice to have.
+[Log Http Status code](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25691) | Bot Service Team | To diagnose 500 errors on bot.
+[Log error on Channels into customer App Insights container](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25692) | Bot Service Team | To diagnose never respond errors, and Channel X errors
+Queries/Documentation to detect 500 errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  For true "500" bot errors, this can be done with existing tools.  For Channel "500" errors, this will be a little more difficult depending where it fails within the channel.
+Queries/Documentation to detect Bot Timeout errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
+Queries/Documentation to detect Bot Never Responds errors | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
+Queries/Documentation to detect Bot Works in Web Chat but not in Channel X | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
 
 
 
+### Priority 1: Enable Out-of-the-box reports
+
+See [the list of reports that should be enabled for bots](https://github.com/daveta/analytics/blob/master/app_insights_for_bots.md) by enabling Application Insights.
+
+Here is the proposal:
+Item |Deliverable | Description
+--- | --- | ---
+Simplify Application Insights registration for Bot | Product | Application Insights is a train wreck configuring.  Customers need carnal knowledge of their startup sequences which is terrible.  Create a platform-level appropriate integration for ASP.Net Core/WebAPI/Node.js.  Should be usable with MVC patterns.  
+Simple Disable of Application Insights | Product (Docs/Samples) | Disabling Application Insights should be simple (ideally single line) and any telemetry within the product should honor it.
+AppInsight UserID/SessionID uses Bot UserID/SessionID | Product | Modifying the events to use Bot level user/session ID's enables other Application Insights reports such as "Funnel"
+LUIS Recognizer Data Collection | Sample | Keep a sample until such time that we have  either of the following:  **(A)** A reasonable understanding of  reporting scenarios that will satisfy 90% of reports to feel comfortable hard coding the data being retrieved. ** (B)** we create a flexible/configuration-based method of collecting data.  (See below).  By choosing a sample, we won't be addressing endless customer enhancement issues of "Please add property X in LUIS intent data collection because I need it for my report".  The customer can modify for their report themselves.
+QnA Recognizer Data Collection | Sample | See LUIS recognizer above.
+Bot Message Middleware | Sample | See LUIS recognizer above.
+(Stretch) Configuration-based mapping collector | Product |A configuration-based method of specifying which properties to pull from specific objects would allow customers flexibility to change the properties being logged, and where the properties will be logged (scoped within the Application Insights Custom Events and Custom Metrics).
+
+### Priority 1: Satisfy Virtual Assistant scenarios
+See [nice writeup from Virtual Assistant team](https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fmicrosoft-my.sharepoint.com%2F%3Ap%3A%2Fp%2Fsrmallan%2FETf7DjcCRKRNvumlc5Ezx0EB2cTn6EYI8p_UrWOus6Q2pA%3Fe%3D15m8a5&data=02%7C01%7Cdewainr%40microsoft.com%7C619bfe4ba5f4476fbfb508d63ea97129%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636765294804345126&sdata=lJHT8yLGmV56L%2BktJ9IeYw0r5jhCVXeCi%2BNeglEQZ8o%3D&reserved=0) about the metrics they would like.
+
+This should manifest as a PowerBI Template.
+
+Item |Deliverable | Description
+--- | --- | ---
+Telemetry Waterfall Dialog | Product |Enables logging to satisfy "Skills" analytics.  More comfortable putting this into product, given the nature of the data being collected that can be enhanced over time.
+Prioritize metrics | Doc |  There are several metrics defined in the documentation.  Need to prioritize and document order.
+Evaluate LUIS \ QnA Data collection | Sample  | Once metrics prioritized, ensure existing telemetry components will be usable.  If not, augment for specific sample.
+New sample demonstrating Telemetry Waterfall | Sample | Something to generate data to drive the new PowerBI template
+Build PowerBI Template | Sample | New reports showing off metrics 
+(Stretch) Correlation/Causation for Skills | Sample | There are several "Surface to the user the reason why they aren't completing skills".  This is semi related to some LUIS scenarios.
+
+### Priority 2: Enable close-the-loop scenarios for LUIS
+
+LUIS team very interested in making a SAT/DSAT detector, segmentation/ recommender/etc.
+Item |Deliverable | Description
+--- | --- | ---
+Baseline | Design Doc | Identification of apps we could use and collect/retain logs
+Close the loop | Design doc | Once we have baseline measurement, attempt to close the loop to suggest labls for utterances. 
+Segmentation | Design doc | Additional feedback for improving the app and suggestions for content.  
