@@ -37,6 +37,19 @@ Queries/Documentation to detect Bot Never Responds errors | daveta/Bot Service T
 Queries/Documentation to detect Bot Works in Web Chat but not in Channel X | daveta/Bot Service Team | Once we have correlated data, we can write some documentation to demonstrate how to diagnose.  
 
 
+### Priority 1: LUIS/QnA User Agent String
+
+(Yochay's addition - John Taylor (?) doing work).
+Enable telemetry to understand usage of QnA and LUIS and be able to answer "How many distinct bots are using QnA or LUIS?" 
+
+Here is the proposal:
+
+Item | Deliverable | Description
+--- | --- | ---
+LUIS Recognizer modifications | Product | Modify the recognizer user agent string 
+QnA Recognizer modifications | Product |Modify the recognizer user agent string 
+
+
 
 ### Priority 1: Enable Out-of-the-box reports
 
