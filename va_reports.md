@@ -5,9 +5,9 @@ Virtual Assistant will require additional telemetry logged from the Bot Framewor
 
 
 ### Identifiers
-A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** are in all events (CustomEvent/Trace/Dependency/etc).  These will reside in the Application Insights standard schema.
+A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** reside in all `customEvents`.  These will manifest as `user_id`/`session_id` within the schema.
 
-For more details on the ID's, see [the bot activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md)
+For more details on all the Activity ID's, see [the bot activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md)
 
 ### CustomEvent: BotMessageReceived
 **Logged From:** TelemetryLoggerMiddleware
