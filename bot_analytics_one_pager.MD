@@ -25,7 +25,7 @@ Here is the proposal (**Note:** Ownership is shared across teams):
 Item |Owner | Description
 --- | --- | ---
 [Enable ABS to enable Application Insights](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25693) | Bot Portal Team | Currently, if you provision a bot through the portal and opt into Application Insights and deploy  the ABS template, Application Insights is not configured correctly.  The portal team believes there's a way to enable this (bot configuration and appsettings.json)
-[Enable W3C distributed tracing](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25537) | Bot Service Team | To correlate queries with Bot application insights 
+[Enable W3C distributed tracing](https://fuselabs.visualstudio.com/BotFramework/_workitems/edit/25537) | Bot Service Team | To correlate queries with Bot application insights **Update!** Craig claims this should be working.
 Verify integration with Distributed Tracing | daveta/Bot Service Team | Need to test and verify operation id's are being transferred and correlated correctly.  Ideally we set up an integration environment for testing.
 Ensure Request/Dependency/Event/Trace telemetry being logged in Bot and correlated | daveta | Ensure the appropriate initializers installed.
 Ensure ILogger telemetry being logged in Application Insights Trace | daveta | Application Insights has ability to intercept ILogger events. 
@@ -41,6 +41,8 @@ Queries/Documentation to detect Bot Works in Web Chat but not in Channel X | dav
 
 (Yochay's addition - John Taylor (?) doing work).
 Enable telemetry to understand usage of QnA and LUIS and be able to answer "How many distinct bots are using QnA or LUIS?" 
+
+(From Chris Mullins: Distinct?  From Jim Lewallen: If we can! There's no PII concerns.  From Carlos Castro: What about Http Headers?)
 
 Here is the proposal:
 
