@@ -23,8 +23,7 @@ Logged when bot receives new message.
 - ConversationId
 - ConversationName
 - Locale
-**NEW**
-- Geolocation per [activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#semantic-action-entities)
+- **NEW** Geolocation per [activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#semantic-action-entities)
 
 ### CustomEvent: LuisIntent.INENTName
 **Logged From:** TelemetryLuisRecognizer
@@ -40,8 +39,7 @@ Logs results from LUIS service.
 - SentimentLabel
 - SentimentScore
 - *LUIS entities*
-**NEW**
-- DialogId
+- **NEW** DialogId
 
 
 ### CustomEvent: QnAMessage
@@ -138,7 +136,7 @@ Cancel / Abandon Correlation: Not happy | Skills Insight | Sentiment LuisIntent.
 
 
 # Machine Learning for Virtual Assistant
-***Pri2 Not in scope for 4.2** 
+***PRI2 Not in scope for 4.2** 
 
 Item |Type | Description
 --- | --- | ---
