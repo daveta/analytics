@@ -7,6 +7,10 @@ Virtual Assistant will require additional telemetry logged from the Bot Framewor
 ### Identifiers
 A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** reside in all `customEvents`.  These will manifest as `user_id`/`session_id` within the schema.
 
+UserID = [ChannelID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id) + [From.Id](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#from)
+
+[ConversationID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#conversation)
+
 For more details on all the Activity ID's, see [the bot activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md)
 
 ### CustomEvent: BotMessageReceived
@@ -57,6 +61,12 @@ Logs results from QnA Maker service.
 
 **NEW**
 ### CustomEvent: "WaterfallDialogStep" (Name TBD)
+
+
+
+Example: `profileDialog.Step4of4`
+**Note**: Steps numbers may be skipped if no prompt is performed within the step.
+
 **Logged From:** TBD
 Logs individual steps from a Waterfall Dialog.
 

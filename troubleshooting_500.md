@@ -9,6 +9,36 @@ The Bot Framework provides an additional level of Application Insights telemetry
 For basic Application Insights support, consult [here](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-nodejs?toc=/azure/azure-monitor/toc.json).
 The Bot Framework provides an additional level of Application Insights telemetry, but it willnot be required for diagnosing http 500 errors.
 
+## Query for exceptions
+The easiest method of analytizing HTTP staus code 500 errors is to begin with exceptions.
+
+The following queries will tell you the most recent exceptions:
+```sql
+exceptions 
+| order by timestamp desc
+| where type == "System.AccessViolationException" 
+| project timestamp, operation_Id, appName 
+```
+
+From thie first query, select a few `operation_Id`'s and then look for more information:
+
+```sql
+let my_operation_id = "d298f1385197fd438b520e617d58f4fb";
+let union_all = () {
+    union
+    (traces | where operation_Id == my_operation_id),
+    (customEvents | where operation_Id == my_operation_id),
+    (requests | where operation_Id == my_operation_id),
+    (dependencies | where operation_Id  == my_operation_id),
+    (exceptions | where operation_Id == my_operation_id)
+};
+
+union_all
+    | order by timestamp desc
+```
+If you have only `exceptions`, analyze the details and see if they correspond to anywhere in the code. If you only see exceptions coming from the Channel Connector (`Microsoft.Bot.ChannelConnector`) then see [Web API](#no-application-insights-events-from-asp.net-web-api) or [Core](#no-application-insights-events-from-ap.net-core) to ensure that Application Insights is set up correctly.
+
+
 ## No Application Insights Events from ASP.Net Web API
 If you are receiving 500 errors and there are no further events within Application Insights from your bot, check the following:
 **Ensure bot runs locally**
