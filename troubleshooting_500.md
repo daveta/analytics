@@ -3,11 +3,11 @@ The first step in troubleshooting 500 errors is enabling Application Insights.
 
 ### Enable Application Insights on ASP.Net
 For basic Application Insights support, consult [here]() https://docs.microsoft.com/en-us/azure/application-insights/app-insights-asp-net).
-The Bot Framework provides an additional level of Application Insights telemetry, but it willnot be required for diagnosing http 500 errors.
+The Bot Framework provides an additional level of Application Insights telemetry, but it will not be required for diagnosing HTTP 500 errors.
 
 ### Enable on node.js
 For basic Application Insights support, consult [here](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-nodejs?toc=/azure/azure-monitor/toc.json).
-The Bot Framework provides an additional level of Application Insights telemetry, but it willnot be required for diagnosing http 500 errors.
+The Bot Framework provides an additional level of Application Insights telemetry, but it will not be required for diagnosing HTTP 500 errors.
 
 ## Query for exceptions
 The easiest method of analytizing HTTP staus code 500 errors is to begin with exceptions.
@@ -36,7 +36,7 @@ let union_all = () {
 union_all
     | order by timestamp desc
 ```
-If you have only `exceptions`, analyze the details and see if they correspond to anywhere in the code. If you only see exceptions coming from the Channel Connector (`Microsoft.Bot.ChannelConnector`) then see [Web API](#no-application-insights-events-from-asp.net-web-api) or [Core](#no-application-insights-events-from-ap.net-core) to ensure that Application Insights is set up correctly.
+If you have only `exceptions`, analyze the details and see if they correspond to anywhere in your code. If you only see exceptions coming from the Channel Connector (`Microsoft.Bot.ChannelConnector`) then see [Web API](#no-application-insights-events-from-asp.net-web-api) or [Core](#no-application-insights-events-from-ap.net-core) to ensure that Application Insights is set up correctly and your code is logging events.
 
 
 ## No Application Insights Events from ASP.Net Web API

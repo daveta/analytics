@@ -40,7 +40,7 @@ If you have only `exceptions`, analyze the details and see if they correspond to
 
 
 ## No Application Insights Events from ASP.Net Web API
-If you are receiving 500 errors and there are no further events within Application Insights from your bot, check the following:
+If you are receiving timeout errors and there are no further events within Application Insights from your bot, check the following:
 **Ensure bot runs locally**
 Make sure your bot runs locally first with the emulator.  
 **Ensure configuration files are being copied**
@@ -117,7 +117,7 @@ Return to the first browser window watching the logs.
 Verify that you are receiving new logs.  If there is no activity, redeploy your bot.
 Switch to the "Application logs" and look for any errors.
 ## No Application Insights Events from ASP.Net Core 
-If you are receiving 500 errors and there are no further events within Application Insights from your bot, check the following:
+If you are receiving timeout errors and there are no further events within Application Insights from your bot, check the following:
 **Ensure bot runs locally**
 Make sure your bot runs locally first with the emulator.  
 **Ensure configuration files are being copied**
