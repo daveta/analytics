@@ -3,9 +3,10 @@
 ## Summary
 Virtual Assistant will require additional telemetry logged from the Bot Framework.  This document attempts to describe the changes required.  The schema for the events is from the [Enterprise Template](https://github.com/Microsoft/AI/tree/master/templates/Enterprise-Template), the **NEW** tags indicate new columns/fields that need to be added.  Based on [the Virtual Assistant Bot Analytics documentation](https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fmicrosoft-my.sharepoint.com%2F%3Ap%3A%2Fp%2Fsrmallan%2FETf7DjcCRKRNvumlc5Ezx0EB2cTn6EYI8p_UrWOus6Q2pA%3Fe%3D15m8a5&data=02%7C01%7Cdewainr%40microsoft.com%7C619bfe4ba5f4476fbfb508d63ea97129%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636765294804345126&sdata=lJHT8yLGmV56L%2BktJ9IeYw0r5jhCVXeCi%2BNeglEQZ8o%3D&reserved=0).
 
+The elements ~~striked through~~ below are logged, but not consumed for the Virtual Assistant reports.
 
 ### Identifiers
-A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** reside in all `customEvents`.  These will manifest as `user_id`/`session_id` within the schema.
+A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** and **ActivityID** reside in all `customEvents`.  These will manifest as `user_id`/`session_id` within the schema.
 
 UserID = [ChannelID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id) + [From.Id](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#from)
 
@@ -13,11 +14,13 @@ UserID = [ChannelID](https://github.com/Microsoft/botframework-obi/blob/master/b
 
 For more details on all the Activity ID's, see [the bot activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md)
 
-### CustomEvent: BotMessageReceived
+### CustomEvent: BotMessageReceived (IpaBotMessageReceived)
 **Logged From:** TelemetryLoggerMiddleware
 Logged when bot receives new message.
 
-- ActivityID
+- UserID (From Telemetry Initializer)
+- ConversationID (From Telemetry Initializer)
+- ActivityID (From Telemetry Initializer)
 - Channel  (Source channel - e.g. Skype, Cortana, Teams)
 - Text (Optional for PII)
 - FromId
@@ -29,7 +32,33 @@ Logged when bot receives new message.
 - Locale
 - **NEW** Geolocation per [activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#semantic-action-entities)
 
-### CustomEvent: LuisIntent.INENTName
+### CustomEvent: BotMessageSend (IpaBotMessageSent)
+**Logged From:** TelemetryLoggerMiddleware
+Logged when bot sends a message.
+
+- UserID (From Telemetry Initializer)
+- ConversationID (From Telemetry Initializer)
+- ActivityID (From Telemetry Initializer)
+- ReplyToID
+- Channel  (Source channel - e.g. Skype, Cortana, Teams)
+- RecipientId
+- ConversationName
+- Locale
+- Text (Optional for PII)
+- RecipientName (Optional for PII)
+
+~~### CustomEvent: BotMessageUpdate~~
+~~**Logged From:** TelemetryLoggerMiddleware~~
+~~Logged when a message is updated by the bot (rare case)~~
+
+
+~~### CustomEvent: BotMessageDelete~~
+~~**Logged From:** TelemetryLoggerMiddleware~~
+~~Logged when a message is deleted by the bot (rare case)~~
+
+
+
+### CustomEvent: LuisIntent.INENTName (LUISResult)
 **Logged From:** TelemetryLuisRecognizer
 Logs results from LUIS service.
 
@@ -60,14 +89,11 @@ Logs results from QnA Maker service.
 
 
 **NEW**
-### CustomEvent: "WaterfallDialogStep" (Name TBD)
-
-
-
+### CustomEvent: "WaterfallDialogStep" (BotFlowStatus)
 Example: `profileDialog.Step4of4`
 **Note**: Steps numbers may be skipped if no prompt is performed within the step.
 
-**Logged From:** TBD
+**Logged From:** SDK when Logger present
 Logs individual steps from a Waterfall Dialog.
 
 - UserID (from Telemetry Initializer Id)
@@ -76,8 +102,8 @@ Logs individual steps from a Waterfall Dialog.
 
 
 **NEW**
-### CustomEvent: "WaterfallDialogConvert" (Name TBD)
-**Logged From:** TBD
+### CustomEvent: "WaterfallDialogConvert"
+**Logged From:** SDK when Logger present
 Logs when a Waterfall Dialog completes.
 
 - UserID (from Telemetry Initializer Id)
@@ -87,7 +113,7 @@ Logs when a Waterfall Dialog completes.
 
 **NEW**
 ### CustomEvent: "WaterfallDialogCancel" (Name TBD)
-**Logged From:** TBD
+**Logged From:** SDK when Logger present
 Logs when a Waterfall Dialog is canceled.
 
 - UserID (from Telemetry Initializer Id)
@@ -96,14 +122,13 @@ Logs when a Waterfall Dialog is canceled.
 - StepId
 
 
-### CustomEvent: "Activity"
-**Logged From:** Channel Service
-Logged by the Channel Service when a message received.
+~~### CustomEvent: "Activity"~~
+~~**Logged From:** Channel Service~~
+~~Logged by the Channel Service when a message received.~~
 
-
-### Exception: Bot Errors
-**Logged From:** Channel Service
-Logged by the channel when a call to the Bot returns a non-2XX Http Response.
+~~### Exception: Bot Errors~~
+~~**Logged From:** Channel Service~~
+~~Logged by the channel when a call to the Bot returns a non-2XX Http Response.~~
 
 
 # Usage Metrics for Virtual Assistant
