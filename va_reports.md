@@ -5,23 +5,25 @@ Virtual Assistant will require additional telemetry logged from the Bot Framewor
 
 The elements ~~striked through~~ below are logged, but not consumed for the Virtual Assistant reports.
 
-### Identifiers
+### Identifiers Added to Custom Events
 A new Application Insights Telemetry Initializer will be added in v4.2 Bot Framework SDK.  Assume the **UserID** and **ConversationID** and **ActivityID** reside in all `customEvents`.  These will manifest as `user_id`/`session_id` within the schema.
 
-UserID = [ChannelID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id) + [From.Id](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#from)
+- `user_id` = [ChannelID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id) + [From.Id](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#from)
+- `session_id` =  [ConversationID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#conversation)
+- `customDimensions.activityId` = [The bot activity ID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id)
+- `customDimensions.activityType` = [The bot activity type ](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id)
+- `customDimensions.channelId` = [The bot activity channel ID ](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#channel-id)
 
-[ConversationID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#conversation)
-
-For more details on all the Activity ID's, see [the bot activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md)
 
 ### CustomEvent: BotMessageReceived (IpaBotMessageReceived)
 **Logged From:** TelemetryLoggerMiddleware
 Logged when bot receives new message.
 
-- UserID (From Telemetry Initializer)
-- ConversationID (From Telemetry Initializer)
-- ActivityID (From Telemetry Initializer)
-- Channel  (Source channel - e.g. Skype, Cortana, Teams)
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Text (Optional for PII)
 - FromId
 - FromName
@@ -36,9 +38,11 @@ Logged when bot receives new message.
 **Logged From:** TelemetryLoggerMiddleware
 Logged when bot sends a message.
 
-- UserID (From Telemetry Initializer)
-- ConversationID (From Telemetry Initializer)
-- ActivityID (From Telemetry Initializer)
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - ReplyToID
 - Channel  (Source channel - e.g. Skype, Cortana, Teams)
 - RecipientId
@@ -47,10 +51,11 @@ Logged when bot sends a message.
 - Text (Optional for PII)
 - RecipientName (Optional for PII)
 
+
+
 ~~### CustomEvent: BotMessageUpdate~~
 ~~**Logged From:** TelemetryLoggerMiddleware~~
 ~~Logged when a message is updated by the bot (rare case)~~
-
 
 ~~### CustomEvent: BotMessageDelete~~
 ~~**Logged From:** TelemetryLoggerMiddleware~~
@@ -62,9 +67,11 @@ Logged when bot sends a message.
 **Logged From:** TelemetryLuisRecognizer
 Logs results from LUIS service.
 
-- UserId
-- ConversationId
-- ActivityId
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Intent
 - IntentScore
 - Question
@@ -79,7 +86,11 @@ Logs results from LUIS service.
 **Logged From:** TelemetryQnaMaker
 Logs results from QnA Maker service.
 
-- ActivityID
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Username
 - ConversationId
 - OriginalQuestion
@@ -88,38 +99,54 @@ Logs results from QnA Maker service.
 - Score (*Optional*: if we found knowledge)
 
 
+
 **NEW**
-### CustomEvent: "WaterfallDialogStep" (BotFlowStatus)
-Example: `profileDialog.Step4of4`
+
+### CustomEvent: "WaterfallStep" (BotFlowStatus)
 **Note**: Steps numbers may be skipped if no prompt is performed within the step.
 
 **Logged From:** SDK when Logger present
 Logs individual steps from a Waterfall Dialog.
 
-- UserID (from Telemetry Initializer Id)
-- Conversation ID (from Telemetry Initializer Id)
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - DialogId
+- StepName (either method name or `StepXofY` if lambda)
+
 
 
 **NEW**
-### CustomEvent: "WaterfallDialogConvert"
+
+### CustomEvent: "WaterfallDialogComplete"
 **Logged From:** SDK when Logger present
 Logs when a Waterfall Dialog completes.
 
-- UserID (from Telemetry Initializer Id)
-- Conversation ID (from Telemetry Initializer Id)
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - DialogId
-- StepId
+
+
 
 **NEW**
+
 ### CustomEvent: "WaterfallDialogCancel" (Name TBD)
 **Logged From:** SDK when Logger present
 Logs when a Waterfall Dialog is canceled.
 
-- UserID (from Telemetry Initializer Id)
-- Conversation ID (from Telemetry Initializer Id)
+- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - DialogId
-- StepId
+- StepName - The step name (either the function name of `StepXofY` if lambda) that the Waterfall was currently progressed to.
+
 
 
 ~~### CustomEvent: "Activity"~~
