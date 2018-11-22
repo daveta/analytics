@@ -16,7 +16,7 @@ A new Application Insights Telemetry Initializer will be added in v4.2 Bot Frame
 
 
 ### CustomEvent: BotMessageReceived (IpaBotMessageReceived)
-**Logged From:** TelemetryLoggerMiddleware
+**Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
 Logged when bot receives new message.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -35,7 +35,7 @@ Logged when bot receives new message.
 - **NEW** Geolocation per [activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#semantic-action-entities)
 
 ### CustomEvent: BotMessageSend (IpaBotMessageSent)
-**Logged From:** TelemetryLoggerMiddleware
+**Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
 Logged when bot sends a message.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -64,7 +64,7 @@ Logged when bot sends a message.
 
 
 ### CustomEvent: LuisIntent.INENTName (LUISResult)
-**Logged From:** TelemetryLuisRecognizer
+**Logged From:** TelemetryLuisRecognizer (**Enterprise Sample**)
 Logs results from LUIS service.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -83,7 +83,7 @@ Logs results from LUIS service.
 
 
 ### CustomEvent: QnAMessage
-**Logged From:** TelemetryQnaMaker
+**Logged From:** TelemetryQnaMaker (**Enterprise Sample**)
 Logs results from QnA Maker service.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -105,7 +105,7 @@ Logs results from QnA Maker service.
 ### CustomEvent: "WaterfallStep" (BotFlowStatus)
 **Note**: Steps numbers may be skipped if no prompt is performed within the step.
 
-**Logged From:** SDK when Logger present
+**Logged From:** SDK when TelemetryClient configured
 Logs individual steps from a Waterfall Dialog.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -121,7 +121,7 @@ Logs individual steps from a Waterfall Dialog.
 **NEW**
 
 ### CustomEvent: "WaterfallDialogComplete"
-**Logged From:** SDK when Logger present
+**Logged From:** SDK when TelemetryClient configured
 Logs when a Waterfall Dialog completes.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -136,7 +136,7 @@ Logs when a Waterfall Dialog completes.
 **NEW**
 
 ### CustomEvent: "WaterfallDialogCancel" (Name TBD)
-**Logged From:** SDK when Logger present
+**Logged From:** SDK when TelemetryClient configured
 Logs when a Waterfall Dialog is canceled.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
