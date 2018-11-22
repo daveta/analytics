@@ -17,6 +17,7 @@ A new Application Insights Telemetry Initializer will be added in v4.2 Bot Frame
 
 ### CustomEvent: BotMessageReceived (IpaBotMessageReceived)
 **Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
+
 Logged when bot receives new message.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -36,6 +37,7 @@ Logged when bot receives new message.
 
 ### CustomEvent: BotMessageSend (IpaBotMessageSent)
 **Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
+
 Logged when bot sends a message.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -65,6 +67,7 @@ Logged when bot sends a message.
 
 ### CustomEvent: LuisIntent.INENTName (LUISResult)
 **Logged From:** TelemetryLuisRecognizer (**Enterprise Sample**)
+
 Logs results from LUIS service.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -84,6 +87,7 @@ Logs results from LUIS service.
 
 ### CustomEvent: QnAMessage
 **Logged From:** TelemetryQnaMaker (**Enterprise Sample**)
+
 Logs results from QnA Maker service.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -106,6 +110,7 @@ Logs results from QnA Maker service.
 **Note**: Steps numbers may be skipped if no prompt is performed within the step.
 
 **Logged From:** SDK when TelemetryClient configured
+
 Logs individual steps from a Waterfall Dialog.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -122,6 +127,7 @@ Logs individual steps from a Waterfall Dialog.
 
 ### CustomEvent: "WaterfallDialogComplete"
 **Logged From:** SDK when TelemetryClient configured
+
 Logs when a Waterfall Dialog completes.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
@@ -137,6 +143,7 @@ Logs when a Waterfall Dialog completes.
 
 ### CustomEvent: "WaterfallDialogCancel" (Name TBD)
 **Logged From:** SDK when TelemetryClient configured
+
 Logs when a Waterfall Dialog is canceled.
 
 - UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
