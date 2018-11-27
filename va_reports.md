@@ -118,8 +118,9 @@ Logs individual steps from a Waterfall Dialog.
 - ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- DialogId
+- DialogId (This is the dialogId (string) passed into your Waterfall.  You can consider this the "waterfall type")
 - StepName (either method name or `StepXofY` if lambda)
+- InstanceID (unique per instance of the dialog)
 
 
 
@@ -135,7 +136,8 @@ Logs when a Waterfall Dialog completes.
 - ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- DialogId
+- DialogId (This is the dialogId (string) passed into your Waterfall.  You can consider this the "waterfall type")
+- InstanceID (unique per instance of the dialog)
 
 
 
@@ -151,8 +153,9 @@ Logs when a Waterfall Dialog is canceled.
 - ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
 - ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- DialogId
+- DialogId (This is the dialogId (string) passed into your Waterfall.  You can consider this the "waterfall type")
 - StepName - The step name (either the function name of `StepXofY` if lambda) that the Waterfall was currently progressed to.
+- InstanceID (unique per instance of the dialog)
 
 
 
