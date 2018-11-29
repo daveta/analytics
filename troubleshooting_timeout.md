@@ -1,4 +1,11 @@
 ## Bot Troubleshooting Timeout errors
+
+Timeout errors usually manifest themselfs as HTTP GatewayTimeout errors (504). This happens when the bot fails to respond to the Bot Framework within 15 seconds. Some common reasons for that behavior include:
+
+- The bot is making an external REST call that takes more than 15 seconds.
+- The bot is receiving a lot of traffic is not scale out appropriately to handle the demand.
+- The bot's hosting plan doesn't have AlwaysOn option selected. This may may impact the ability of the bot to handle burst of traffic.
+
 The first step in troubleshooting timeout errors is enabling Application Insights. 
 
 ### Enable Application Insights on ASP.Net
