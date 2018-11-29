@@ -5,8 +5,6 @@ In version 4.2 of the Bot Framework SDK, telemetry logging was added into the pr
 
 This document covers how to integrate your bot with the new telemetry features.  
 
-The schema for the events is from the [Enterprise Template](https://github.com/Microsoft/AI/tree/master/templates/Enterprise-Template), the **NEW** tags indicate new columns/fields that need to be added.  Based on [the Virtual Assistant Bot Analytics documentation](https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fmicrosoft-my.sharepoint.com%2F%3Ap%3A%2Fp%2Fsrmallan%2FETf7DjcCRKRNvumlc5Ezx0EB2cTn6EYI8p_UrWOus6Q2pA%3Fe%3D15m8a5&data=02%7C01%7Cdewainr%40microsoft.com%7C619bfe4ba5f4476fbfb508d63ea97129%7C72f988bf86f141af91ab2d7cd011db47%7C1%7C0%7C636765294804345126&sdata=lJHT8yLGmV56L%2BktJ9IeYw0r5jhCVXeCi%2BNeglEQZ8o%3D&reserved=0).
-
 ## Using Bot Configuration (Option 1 of 2)
 There are two methods of configuring your bot.  The first assumes you are integrating with Application Insights.
 
@@ -100,7 +98,9 @@ public void ConfigureServices(IServiceCollection services)
 const appInsightsClient = new ApplicationInsightsTelemetryClient(botConfig);
 ```
 
+
 ### Identifiers Added to Custom Events
+
 A new Application Insights Telemetry Initializer modifies the values of the standard Application Insights  `user_id` and `session_id`.  The values are from the bot's payload data.
 
 In addition, `activitiId`, `activityType` and `channelId` are also added.
@@ -175,7 +175,8 @@ Logs when a Waterfall Dialog is canceled.
 - `customDimensions.StepName` (either method name or `StepXofY` if lambda)
 - `customDimensions.InstanceID` (unique per instance of the dialog)
 
-## Events generated with code from samples
+## Events generated with Enterprise Template
+The [Enterprise Template](https://github.com/Microsoft/AI/tree/master/templates/Enterprise-Template) is open source code that can be freely copied. 
 
 ### CustomEvent: BotMessageReceived (IpaBotMessageReceived)
 **Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
@@ -195,7 +196,6 @@ Logged when bot receives new message.
 - ConversationId
 - ConversationName
 - Locale
-- **NEW** Geolocation per [activity spec](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#semantic-action-entities)
 
 ### CustomEvent: BotMessageSend (IpaBotMessageSent)
 **Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
