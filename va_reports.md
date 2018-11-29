@@ -217,3 +217,9 @@ Identify user abandon | Churn | ? Assume abandon defined by duration.  Look-alik
 Identify low consumption | Churn | Look-alike model
 User preference | Recommendations | ? LUIS entities / intents? Look-alike? Need more information 
 Buy new product in future | Sales/Marketing | LUIS entities / Qna?
+
+# Application Insights Requirements
+- Be able to override IBotTelemetryClient (NullBotTelemetryCiient)
+  - Custom TelemetryClient (from override IBotTelemetryClient) 	
+- Be able to override ILogger
+- Initialize with Bot Configuration
