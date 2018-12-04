@@ -122,7 +122,34 @@ Property |Type | Details
 
 ## WaterfallDialog events
 
-In addition  to generating your own events, the` WaterfallDialog` object within the SDK now generates events. The following section describes the events generated from within the Bot Framework. By setting the `TelemetryClient` property on the `WaterfallDialog` these events will be stored.
+In addition  to generating your own events, the `WaterfallDialog` object within the SDK now generates events. The following section describes the events generated from within the Bot Framework. By setting the `TelemetryClient` property on the `WaterfallDialog` these events will be stored.
+
+Here's an example of modifying a sample (BasicBot) which employs the `WaterfallDialog`, to log telemetry events.  BasicBot employs a common pattern used where a `WaterfallDialog` is placed within a `ComponentDialog` (`GreetingDialog`).
+```csharp
+// IBotTelemetryClient is direct injected into our Bot
+public BasicBot(BotServices services, UserState userState, ConversationState conversationState, IBotTelemetryClient telemetryClient)
+...
+
+// The IBotTelemetryClient passed to the GreetingDialog
+...
+Dialogs = new DialogSet(_dialogStateAccessor);
+Dialogs.Add(new GreetingDialog(_greetingStateAccessor, telemetryClient));
+...
+
+// The IBotTelemetryClient to the WaterfallDialog
+...
+AddDialog(new WaterfallDialog(ProfileDialog, waterfallSteps) { TelemetryClient = telemetryClient });
+...
+
+```
+
+> ASP.Net Core Example
+
+
+
+Once the `WaterfallDialog` has a configured `IBotTelemetryClient`, it will begin logging events.
+
+
 
 ### CustomEvent: "WaterfallStart" 
 

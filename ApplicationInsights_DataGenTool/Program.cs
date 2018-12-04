@@ -15,6 +15,9 @@ namespace ConsoleApp
         {
             TelemetryConfiguration configuration = TelemetryConfiguration.CreateFromConfiguration(File.ReadAllText("ApplicationInsights.config"));
             var telemetryClient = new TelemetryClient(configuration);
+
+            // 
+
             // run app...
             SimulateUsage(telemetryClient, 500);
 
@@ -43,20 +46,33 @@ namespace ConsoleApp
 
             };
 
+ 
+
             for (int i=0; i<users; i++)
             {
-                telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
+                
                 telemetryClient.Context.User.Id = Guid.NewGuid().ToString();
+                
 
+                
                 
                 var traceString = $"UserId:{telemetryClient.Context.Session.Id}:SessionId:{telemetryClient.Context.User.Id}";
                 foreach (var dialog in dialogs)
                 {
+
                     var properties = CreateProperties();
+
+                    telemetryClient.Context.Operation.Id = Guid.NewGuid().ToString();
+                    telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
+
                     var dialogInstanceId = Guid.NewGuid().ToString();
+                    
                     properties.Add("DialogId", dialog.Name);
                     properties.Add("InstanceId", dialogInstanceId);
                     traceString += $":DialogId:{properties["DialogId"]}:";
+
+                    
+                    LogLuisIntent(telemetryClient, properties);
 
                     for (int stepIndex=0; stepIndex < dialog.Steps.Length; stepIndex++)
                     {
@@ -125,6 +141,41 @@ namespace ConsoleApp
                         { "activityType", activityType },
                     };
         }
+
+        static void LogLuisIntent(TelemetryClient telemetryClient, Dictionary<string, string> properties)
+        {
+            var props = new Dictionary<string, string>(properties);
+            LUISIntentStats[] intents =
+            {
+                new LUISIntentStats("FirstIntent", 5),
+                new LUISIntentStats("SecondIntent", 5),
+                new LUISIntentStats("ThirdIntent", 5)
+            };
+
+            bool found = false;
+            foreach (var intent in intents)
+            {
+                if (intent.CurCount < intent.MaxCount)
+                {
+                    props.Add("Question", $"{intent.Name} question");
+                    props.Add("Intent", intent.Name);
+                    props.Add("IntentScore", ".45");
+                    telemetryClient.TrackEvent($"LuisIntent.{intent.Name}", props);
+                    found = true;
+                    break;
+                }
+            }
+
+            // No slots open, take first one.
+            if (!found)
+            {
+                var intent2 = intents[0];
+                props.Add("Question", $"{intent2.Name} question");
+                props.Add("Intent", intent2.Name);
+                props.Add("IntentScore", ".48");
+                telemetryClient.TrackEvent($"LuisIntent.{intent2.Name}", props);
+            }
+        }
     }
     public class StepStats
     {
@@ -149,5 +200,18 @@ namespace ConsoleApp
         }
         public string Name { get; set; }
         public StepStats[] Steps { get; set; }
+    }
+
+    public class LUISIntentStats
+    {
+        public LUISIntentStats(string name, int maxCount)
+        {
+                Name = name;
+                MaxCount = maxCount;
+        }
+
+        public string Name { get; set; }
+        public int MaxCount { get; set; }
+        public int CurCount { get; set; } = 0;
     }
 }
