@@ -96,6 +96,13 @@ The Power BI template is located under the following folder:
 
 `Middleware\Telemetry\ExamplePowerBIDashboard.pbit`
 
+### Installation
+The [PowerBI Desktop client](https://aka.ms/pbidesktopstore) is available for Windows clients.
+Alternatively, you can use the PowerBI service.  If you don't have a PowerBI service account, sign up for a [free 60 day trial account](https://app.powerbi.com/signupredirect?pbi_source=web) and upload the PowerBI template to view the reports.
+
+
+
+
 Below are some sample pages of the report.
 
 ### Overall Usage
