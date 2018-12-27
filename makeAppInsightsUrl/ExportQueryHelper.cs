@@ -1,4 +1,7 @@
-﻿using Microsoft.Bot.Configuration;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using Microsoft.Bot.Configuration;
 using System;
 using System.Globalization;
 using System.IO;
