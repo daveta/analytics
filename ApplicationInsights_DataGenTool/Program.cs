@@ -11,9 +11,12 @@ namespace ConsoleApp
 {
     class Program
     {
+        static OperationIdInitializer _operationIdInitializer = new OperationIdInitializer();
+
         static void Main(string[] args)
         {
             TelemetryConfiguration configuration = TelemetryConfiguration.CreateFromConfiguration(File.ReadAllText("ApplicationInsights.config"));
+            configuration.TelemetryInitializers.Add(_operationIdInitializer);
             var telemetryClient = new TelemetryClient(configuration);
 
             // 
@@ -62,7 +65,7 @@ namespace ConsoleApp
 
                     var properties = CreateProperties();
 
-                    telemetryClient.Context.Operation.Id = Guid.NewGuid().ToString();
+                    _operationIdInitializer.OperationID = Guid.NewGuid().ToString();
                     telemetryClient.Context.Session.Id = Guid.NewGuid().ToString();
 
                     var dialogInstanceId = Guid.NewGuid().ToString();
@@ -147,9 +150,9 @@ namespace ConsoleApp
             var props = new Dictionary<string, string>(properties);
             LUISIntentStats[] intents =
             {
-                new LUISIntentStats("FirstIntent", 5),
-                new LUISIntentStats("SecondIntent", 5),
-                new LUISIntentStats("ThirdIntent", 5)
+                new LUISIntentStats("GreetingIntent", 5),
+                new LUISIntentStats("ChitChatIntent", 5),
+                new LUISIntentStats("QuestionIntent", 5)
             };
 
             bool found = false;
