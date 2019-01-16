@@ -1,0 +1,140 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachineName": {
+      "type": "string"
+    },
+    "virtualMachineResourceGroup": {
+      "type": "string"
+    },
+    "dashboardName": {
+      "type": "string"
+    },
+    "dashboardRegion": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "dashboardName": "[concat('BotConversation', resourceGroup().name)]"
+  },  
+  "resources": [
+    {
+      "properties": {
+        "lenses": {
+          "0": {
+            "order": 0,
+            "parts": {
+              "0": {
+                "position": {
+                  "x": 0,
+                  "y": 0,
+                  "rowSpan": 4,
+                  "colSpan": 6
+                },
+                "metadata": {
+                  "asset": {
+                    "idInputName": "ComponentId",
+                    "type": "ApplicationInsights"
+                  },
+                  "inputs": [
+                    {
+                      "name": "ComponentId",
+                      "value": {
+                        "SubscriptionId": "[subscription().subscriptionId]",
+                        "ResourceGroup": "[resourceGroup().name]",
+                        "Name": "[parameters('virtualMachineName')]",
+                        "ResourceId": "[resourceId(parameters('virtualMachineResourceGroup'), 'microsoft.insights/components', parameters('virtualMachineName'))]"
+                      }
+                    },
+                    {
+                      "name": "Query",
+                      "value": "let usersByDay = customEvents\r\n\t| where name == 'Activity' and timestamp >= startofday(ago(20d)) and timestamp <= startofday(now())\r\n\t| extend from = customDimensions['from']\r\n\t| extend from = tostring(iff(isnull(from), customDimensions['From ID'], from))\r\n\t| extend channel = customDimensions['channel']\r\n\t| extend channel = tostring(iff(isnull(channel), customDimensions['Channel ID'], channel))\r\n\t| summarize results = dcount(from) by bin(timestamp, 1d), from, channel;\r\nusersByDay\r\n"
+                    },
+                    {
+                      "name": "Dimensions",
+                      "value": {
+                        "xAxis": {
+                          "name": "timestamp",
+                          "type": "DateTime"
+                        },
+                        "yAxis": [
+                          {
+                            "name": "results",
+                            "type": "Int64"
+                          }
+                        ],
+                        "splitBy": [
+                          {
+                            "name": "from",
+                            "type": "String"
+                          }
+                        ],
+                        "aggregation": "Sum"
+                      }
+                    },
+                    {
+                      "name": "Version",
+                      "value": "1.0"
+                    },
+                    {
+                      "name": "DashboardId",
+                      "value": "[concat(resourceGroup().id, '/providers/Microsoft.Portal/dashboards/', variables('dashboardName'))]"
+                    },
+                    {
+                      "name": "PartId",
+                      "value": "54a9fc7d-f039-4ad3-84aa-a238bbe81240"
+                    },
+                    {
+                      "name": "PartTitle",
+                      "value": "Analytics"
+                    },
+                    {
+                      "name": "PartSubTitle",
+                      "value": "[parameters('virtualMachineName')]"
+                    },
+                    {
+                      "name": "resourceTypeMode",
+                      "value": "components"
+                    },
+                    {
+                      "name": "ControlType",
+                      "value": "AnalyticsChart"
+                    },
+                    {
+                      "name": "SpecificChart",
+                      "value": "Bar"
+                    }
+                  ],
+                  "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart"
+                }
+              }
+            }
+          }
+        }
+      },
+      "metadata": {
+        "model": {
+          "timeRange": {
+            "value": {
+              "relative": {
+                "duration": 24,
+                "timeUnit": 1
+              }
+            },
+            "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+          }
+        }
+      },
+      "apiVersion": "2015-08-01-preview",
+      "type": "Microsoft.Portal/dashboards",
+      "id": "[concat(resourceGroup().id,'/providers/Microsoft.Portal/dashboards/', variables('dashboardName'))]",
+      "name": "[variables('dashboardName')]",
+
+      "location": "[parameters('dashboardRegion')]",
+      "tags": {
+        "hidden-title": "[variables('dashboardName')]"
+      }
+    }
+  ]
+}
