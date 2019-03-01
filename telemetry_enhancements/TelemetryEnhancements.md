@@ -11,7 +11,8 @@ There are three new components  added to the SDK.  All components will log to th
 - *ITelemetryLuisRecognizer* interface and associated *TelemetryLuisRecognizer* class.
 - *ITelemetryQnAMaker* interface and associated *TelemetryQnAMaker* class.
 
-Requirements
+**Requirements**
+
 |Name  | Description |
 |:-----|:------------|
 |Out-of-the-box logging | As a developer, I can use SDK Telemetry components without additional configuration to log events with a documented schema |
