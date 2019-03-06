@@ -8,7 +8,7 @@ Today, the majority of the Bot Framework Telemetry being logged is from sample c
 There are three new components  added to the SDK.  All components log using the *IBotTelemetryClient* interface which can be overridden with a custom implementation.
 
 - A  Bot Framework Middleware component (*TelemetryLoggerMiddleware*) that will log when messages are received, sent, updated or deleted. User override for custom logging.
-- *TelemetryLuisClient* class.  User can override for custom logging.  The client is derived from the `LuisClient`. 
+- *TelemetryLuisRecognizer* class.  User can override for custom logging.  
 - *TelemetryQnAMaker*  class.  User can override for custom logging.
 
 **Requirements**
