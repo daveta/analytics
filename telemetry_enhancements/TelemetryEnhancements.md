@@ -53,10 +53,12 @@ class MyTelemetryMiddleware : TelemetryLoggerMiddleware
                   CancellationToken cancellation)
     {
         // Fill in the "standard" properties for BotMessageReceived
-        var properties = FillReceiveEventProperties(activity, { });
-
-        // Add my custom property
-        properties.Add("MyImportantProperty", "myImportantValue");
+        // and add our own property.
+        var properties = FillReceiveEventProperties(activity, 
+                    new Dictionary<string, string>
+                    { {"MyImportantProperty", "myImportantValue" } } );
+                    
+        // Use TelemetryClient to log event
         TelemetryClient.TrackEvent(
                         TelemetryLoggerConstants.BotMsgReceiveEvent,
                         properties);
@@ -90,6 +92,7 @@ class MyTelemetryMiddleware : TelemetryLoggerMiddleware
         TelemetryClient.TrackEvent(
                         TelemetryLoggerConstants.BotMsgSendEvent,
                         botMsgSendProperties);
+                        
         // Create second event.
         var secondEventProperties = new Dictionary<string, string>();
         secondEventProperties.Add("activityId",
