@@ -26,9 +26,9 @@ There are three new components  added to the SDK.  All components log using the 
 
 
 
-The following issues also must be addressed:
-https://github.com/Microsoft/AI/issues/762
-https://github.com/Microsoft/AI/issues/840
+Other Issues:
+https://github.com/Microsoft/AI/issues/762 : We'll need to punt on this until v4.4 when storage is fixed.
+https://github.com/Microsoft/AI/issues/840 : This can be fixed
 
 
 ## Telemetry Middleware
