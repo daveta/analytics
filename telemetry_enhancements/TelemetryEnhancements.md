@@ -7,9 +7,9 @@ Today, the majority of the Bot Framework Telemetry being logged is from sample c
 ## Overview of changes
 There are three new components  added to the SDK.  All components log using the *IBotTelemetryClient* interface which can be overridden with a custom implementation.
 
-- A  Bot Framework Middleware component (*TelemetryLoggerMiddleware*) that will log when messages are received, sent, updated or deleted. 
-- *ITelemetryLuisRecognizer* interface and associated *TelemetryLuisRecognizer* class.
-- *ITelemetryQnAMaker* interface and associated *TelemetryQnAMaker* class.
+- A  Bot Framework Middleware component (*TelemetryLoggerMiddleware*) that will log when messages are received, sent, updated or deleted. User override for custom logging.
+- *TelemetryLuisClient* class.  User can override for custom logging.  The client is derived from the `LuisClient`. 
+- *TelemetryQnAMaker*  class.  User can override for custom logging.
 
 **Requirements**
 
@@ -22,6 +22,7 @@ There are three new components  added to the SDK.  All components log using the 
 | Out of box reports can be invalidated | As a developer, I can change the properties being logged and break the out of box reports and dashboards |
 | Interfaces must include data privacy settings | As a developer, I can change what data is logged in the event storage based on a flag, so I can adhere to GDPR and other standards for privacy |
 | A default implementation should log events to Application Insights as "CustomEvent" | See event definitions below - search for "CustomEvent" |
+| Telemetry should be usable from LuisClient and Luis Recognizer | Customers using either the LuisClient or LuisRecognizer should be able to override pull telemetry |
 
 
 
@@ -33,61 +34,280 @@ https://github.com/Microsoft/AI/issues/840
 ## Telemetry Middleware
 **Microsoft.Bot.Builder.TelemetryLoggerMiddleware**
 
-There following is an example `Startup.cs` where the Telemetry Logger Middleware is being created.  Once the middleware component is created, it can be added directly to the Middlware collection.  However, in the example below, the code is overriding the data that's being logged for the Middleware component to add custom properties.
-
-There are additional overrides when a message is sent, deleted or updated which share the same signature.
-
+### Usage
+#### Out of box usage
+The TelemetryLoggerMiddleware is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
 ```csharp
 var telemetryClient = sp.GetService<IBotTelemetryClient>();
-var appInsightsLogger = new TelemetryLoggerMiddleware(telemetryClient, logPersonalInformation: true);
-
-// Override Receive Event to add "MyImportantProperty"
-appInsightsLogger.OnReceiveEvent(async (ctx, logPersonalInformation) => { 
-    var activity = ctx.Activity;
-    Dictionary<string, string> properties = new Dictionary() 
-    {
-       { "MyImportantProperty", "ImportantValue" },
-    };
-    
-    TelemetryLoggerMiddleware.FillStandardReceiveProperties(activity, logPersonalInformation);
-    
-    return properties;
-})
-
-options.Middleware.Add(appInsightsLogger);
+var telemetryLogger = new TelemetryLoggerMiddleware(telemetryClient, logPersonalInformation: true);
+options.Middleware.Add(telemetryLogger);  // Add to the middleware collection
 ```
-### CustomEvent: BotMessageReceived 
-Logged when bot receives new message.
+#### Adding properties
+If the developer decides to add additional properties, the TelemetryLoggerMiddleware class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `BotMessageReceived` event.  `BotMessageReceived` is logged when the user sends a message to the bot.  Adding the additional property can be accomplished in the following way:
+```csharp
+class MyTelemetryMiddleware : TelemetryLoggerMiddleware
+{
+    ...
+    public Task OnReceiveActivityAsync(
+                  Activity activity,
+                  CancellationToken cancellation)
+    {
+        // Fill in the "standard" properties for BotMessageReceived
+        var properties = FillReceiveEventProperties(activity, { });
 
-This event is logged from `Microsoft.Bot.Builder.TelemetryLoggerMiddleware` using the `Microsoft.Bot.Builder.IBotTelemetry.TrackEvent()` method.
+        // Add my custom property
+        properties.Add("MyImportantProperty", "myImportantValue");
+        TelemetryClient.TrackEvent(
+                        TelemetryLoggerConstants.BotMsgReceiveEvent,
+                        properties);
+    }
+    ...
+}
+```
+And in Startup, we would add the new class:
+```csharp
+var telemetryLogger = new TelemetryLuisRecognizer(telemetryClient, logPersonalInformation: true);
+options.Middleware.Add(telemetryLogger);  // Add to the middleware collection
+```
+#### Completely replacing properties / Additional event(s)
+If the developer decides to completely replace properties being logged, the `TelemetryLoggerMiddleware` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
 
-- UserID  
-  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **user** identifier (*Temelemtry.Context.User.Id*) used within Application Insights.  
-  - A combination of the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id) and the [User ID](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id) (concatenated together) of the Bot Protocol.
-- ConversationID
-  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **session**  identifier (*Telemetry.Context.Session.Id*) used within Application Insights.  
-  - Corresponds to the [Conversation ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#conversation) of the Bot Protocol.
+For example, if the developer would like to completely replace the`BotMessageSend` properties and send multiple events, the following demonstrates how this could be performed:
+
+```csharp
+class MyTelemetryMiddleware : TelemetryLoggerMiddleware
+{
+    ...
+    public Task<RecognizerResult> OnLuisRecognizeAsync(
+                  Activity activity,
+                  string dialogId = null,
+                  CancellationToken cancellation)
+    {
+        // Override properties for BotMsgSendEvent
+        var botMsgSendProperties = new Dictionary<string, string>();
+        properties.Add("MyImportantProperty", "myImportantValue");
+        // Log event
+        TelemetryClient.TrackEvent(
+                        TelemetryLoggerConstants.BotMsgSendEvent,
+                        botMsgSendProperties);
+        // Create second event.
+        var secondEventProperties = new Dictionary<string, string>();
+        secondEventProperties.Add("activityId",
+                                   activity.Id);
+        secondEventProperties.Add("MyImportantProperty",
+                                   "myImportantValue");
+        TelemetryClient.TrackEvent(
+                        "MySecondEvent",
+                        secondEventProperties);
+    }
+    ...
+}
+```
+Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
+
+### Events Logged from Telemetry Middleware
+[BotMessageSend](#botmessagesend)
+[BotMessageReceived](#botmessagereceived)
+[BotMessageUpdate](#botmessageupdate)
+[BotMessageDelete](#botmessagedelete)
+
+## Telemetry support LUIS 
+
+C#: **Microsoft.Bot.Builder.AI.Luis.TelemetryLuisRecognizer **
+
+
+### Usage
+#### Out of box usage
+The TelemetryLuisClientHandler is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+
+```csharp
+var client = new TelemetryLuisRecognizer(telemetryClient, luisApp, luisOptions, logPersonalInformation:true);
+```
+#### Adding properties
+If the developer decides to add additional properties, the TelemetryLuisClientHandler class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `LuisResult` event.  `LuisResult` is logged when a LUIS prediction call is performed.  Adding the additional property can be accomplished in the following way:
+```csharp
+class MyLuisRecognizer : TelemetryLuisRecognizer 
+{
+   ...
+   protected Task OnRecognizerResult(RecognizerResult result,
+                  CancellationToken cancellation)
+   {
+       var luisEventProperties = FillLuisEventProperties(result, 
+               new Dictionary<string, string>
+               { {"MyImportantProperty", "myImportantValue" } } );
+        
+        TelemetryClient.TrackEvent(
+                        LuisTelemetryConstants.LuisResultEvent,
+                        luisEventProperties);
+       }    
+    ...
+}
+```
+
+#### Completely replacing properties / Additional event(s)
+If the developer decides to completely replace properties being logged, the `TelemetryLuisRecognizer` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
+
+For example, if the developer would like to completely replace the`BotMessageSend` properties and send multiple events, the following demonstrates how this could be performed:
+
+```csharp
+class MyLuisRecognizer : TelemetryLuisRecognizer
+{
+    ...
+    public Task OnRecognizerResult(RecognizerResult result,
+                  CancellationToken cancellation)
+    {
+        // Override properties for BotMsgSendEvent
+        var luisProperties = new Dictionary<string, string>();
+        properties.Add("MyImportantProperty", "myImportantValue");
+        // Log event
+        TelemetryClient.TrackEvent(
+                        LuisTelemetryConstants.LuisResultEvent,
+                        botMsgSendProperties);
+        // Create second event.
+        var secondEventProperties = new Dictionary<string, string>();
+        secondEventProperties.Add("activityId",
+                                   Activity.Id);
+        secondEventProperties.Add("MyImportantProperty",
+                                   "myImportantValue");
+        TelemetryClient.TrackEvent(
+                        "MySecondEvent",
+                        secondEventProperties);
+    }
+    ...
+}
+```
+Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
+
+### Events Logged from TelemetryLuisRecognizer
+[LuisResult](#luisresult)
+
+## Telemetry QnA Recognizer
+
+C#: **Microsoft.Bot.Builder.AI.Luis.TelemetryQnAMaker **
+
+
+### Usage
+#### Out of box usage
+The TelemetryQnAMaker is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+
+```csharp
+var client = new TelemetryQnAMaker(telemetryClient, endpoint, options, logPersonalInformation:true);
+```
+#### Adding properties
+If the developer decides to add additional properties, the TelemetryQnAMaker class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `QnAMessage` event.  `QnAMessage` is logged when a QnA call is performed.  Adding the additional property can be accomplished in the following way:
+```csharp
+class MyQnAMaker : TelemetryQnAMaker 
+{
+   ...
+   protected Task OnRecognizerResult(QueryResult result,
+                  CancellationToken cancellation)
+   {
+       var qnaEventProperties = FillQnAEventProperties(result, 
+               new Dictionary<string, string>
+               { {"MyImportantProperty", "myImportantValue" } } );
+        
+        TelemetryClient.TrackEvent(
+                        QnATelemetryConstants.QnAMessage,
+                        qnaEventProperties);
+       }    
+    ...
+}
+```
+
+#### Completely replacing properties / Additional event(s)
+If the developer decides to completely replace properties being logged, the `TelemetryQnAMaker` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
+
+For example, if the developer would like to completely replace the`QnAMessage` properties and send multiple events, the following demonstrates how this could be performed:
+
+```csharp
+class MyLuisRecognizer : TelemetryQnAMaker
+{
+    ...
+    public Task OnRecognizerResult(RecognizerResult result,
+                  CancellationToken cancellation)
+    {
+        // Override properties for QnAMessage
+        var qnaProperties = new Dictionary<string, string>();
+        qnaProperties.Add("MyImportantProperty", "myImportantValue");
+        // Log event
+        TelemetryClient.TrackEvent(
+                        QnATelemetryConstants.QnAMessage,
+                        qnaProperties);
+        // Create second event.
+        var secondEventProperties = new Dictionary<string, string>();
+        secondEventProperties.Add("activityId",
+                                   Activity.Id);
+        secondEventProperties.Add("MyImportantProperty",
+                                   "myImportantValue");
+        TelemetryClient.TrackEvent(
+                        "MySecondEvent",
+                        secondEventProperties);
+    }
+    ...
+}
+```
+Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
+
+### Events Logged from TelemetryLuisRecognizer
+[QnAMessage](#qnamessage)
+
+
+
+# Appendix A : Middleware Events
+## BotMessageReceived 
+Logged when bot receives new message from a user.
+
+When not overridden, this event is logged from `Microsoft.Bot.Builder.TelemetryLoggerMiddleware` using the `Microsoft.Bot.Builder.IBotTelemetry.TrackEvent()` method.
+
+- Session Identifier  
+  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **session** identifier (*Temelemtry.Context.Session.Id*) used within Application Insights.  
+  - Corresponds to the [Conversation ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#conversation) as defined by Bot Framework protocol..
+  - The property name logged is `session_id`.
+
+- User Identifier
+  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **user**  identifier (*Telemetry.Context.User.Id*) used within Application Insights.  
+  - The value of this property is a combination of the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#channel-id) and the [User ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) (concatenated together) properties as defined by the Bot Framework protocol.
+  - The property name logged is `user_id`.
 - ActivityID 
+  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.
+  - Corresponds to the [Activity ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#Id) as defined by Bot Framework protocol..
+  - The property name is `activityId`.
+- Channel Identifier
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.  
-  - Corresponds to the [Activity ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#Id) of the Bot Protocol.
-- Channel 
-  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.  
-  - Corresponds to the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id) of the Bot Protocol.
+  - Corresponds to the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id) of the Bot Framework protocol.
+  - The property name logged is `channelId`.
 - ActivityType 
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.  
-  - Corresponds to the [Activity Type](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#type) of the Bot Protocol.
+  - Corresponds to the [Activity Type](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#type) of the Bot Framework protocol.
+  - The property name logged is `activityType`.
 - Text
   - Optionally logged when the `logPersonalInformation` property is set to `true`.
-  - Corresponds to the [Activity Text](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#text) field of the Bot Protocol.
+  - Corresponds to the [Activity Text](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#text) field of the Bot Framework protocol.
+  - The property name logged is `text`.
 - FromId
+  - Corresponds to the [From Identifier](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromId`.
 - FromName
+  - Optionally logged when the `logPersonalInformation` property is set to `true`.
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 - RecipientId
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 - RecipientName
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 - ConversationId
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 - ConversationName
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 - Locale
+  - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
+  - The property name logged is `fromName`.
 
-### CustomEvent: BotMessageSend 
+## BotMessageSend 
 **Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
 
 Logged when bot sends a message.
@@ -106,47 +326,17 @@ Logged when bot sends a message.
 - RecipientName (Optional for PII)
 
 
-### CustomEvent: BotMessageUpdate
+## BotMessageUpdate
 **Logged From:** TelemetryLoggerMiddleware
 Logged when a message is updated by the bot (rare case)
 
-### CustomEvent: BotMessageDelete~~
+## BotMessageDelete
 **Logged From:** TelemetryLoggerMiddleware
 Logged when a message is deleted by the bot (rare case)
 
+# Appendix B: LUIS Events
 
-
-## LUIS Recognizer
-
-```csharp
-public interface ITelemetryLuisRecognizer : IRecognizer
-{
-    bool LogPersonalInformation { get; }
-
-    Task<T> RecognizeAsync<T>(DialogContext dialogContext, Dictionary<string, string> properties = DefaultLuisProperties, CancellationToken cancellationToken = default(CancellationToken))
-            where T : IRecognizerConvert, new();
-
-    new Task<T> RecognizeAsync<T>(ITurnContext turnContext, Dictionary<string, string> properties = DefaultLuisProperties, CancellationToken cancellationToken = default(CancellationToken))
-            where T : IRecognizerConvert, new();
-}
-```
-
-## QnA Recognizer
-
-```csharp
-public interface ITelemetryQnAMaker
-{
-    bool LogPersonalInformation { get; }
-
-    Task<QueryResult[]> GetAnswersAsync(ITurnContext context, Dictionary<string, string> properties = DefaultQnAProperties, QnAMakerOptions options = null);
-}
-```
-
-
-
-
-
-### CustomEvent: LuisIntent.INENTName 
+## CustomEvent: LuisIntent.INENTName 
 **Logged From:** TelemetryLuisRecognizer (**Enterprise Sample**)
 
 Logs results from LUIS service.
@@ -165,8 +355,9 @@ Logs results from LUIS service.
 - *LUIS entities*
 - **NEW** DialogId
 
+# Appendix C: QnA Events
 
-### CustomEvent: QnAMessage
+## CustomEvent: QnAMessage
 **Logged From:** TelemetryQnaMaker (**Enterprise Sample**)
 
 Logs results from QnA Maker service.
@@ -182,4 +373,3 @@ Logs results from QnA Maker service.
 - Question
 - Answer
 - Score (*Optional*: if we found knowledge)
-
