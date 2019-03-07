@@ -121,19 +121,24 @@ C#: **Microsoft.Bot.Builder.AI.Luis.TelemetryLuisRecognizer **
 
 ### Usage
 #### Out of box usage
-The TelemetryLuisClientHandler is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+The LuisClientHandler is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+
+During construction, an IBotTelemetryClient object must be passed for this to work.
 
 ```csharp
-var client = new TelemetryLuisRecognizer(telemetryClient, luisApp, luisOptions, logPersonalInformation:true);
+var client = new LuisRecognizer(luisApp, luisOptions, ... telemetryClient);
 ```
 #### Adding properties
 If the developer decides to add additional properties, the TelemetryLuisClientHandler class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `LuisResult` event.  `LuisResult` is logged when a LUIS prediction call is performed.  Adding the additional property can be accomplished in the following way:
 ```csharp
-class MyLuisRecognizer : TelemetryLuisRecognizer 
+class MyLuisRecognizer : LuisRecognizer 
 {
    ...
-   protected Task OnRecognizerResult(RecognizerResult result,
-                  CancellationToken cancellation)
+   override protected Task OnRecognizerResultAsync(
+           RecognizerResult recognizerResult,
+           ITurnContext turnContext,
+           Dictionary<string, string> properties = null,
+           CancellationToken cancellationToken = default(CancellationToken))
    {
        var luisEventProperties = FillLuisEventProperties(result, 
                new Dictionary<string, string>
@@ -142,8 +147,9 @@ class MyLuisRecognizer : TelemetryLuisRecognizer
         TelemetryClient.TrackEvent(
                         LuisTelemetryConstants.LuisResultEvent,
                         luisEventProperties);
-       }    
-    ...
+        ..
+   }    
+   ...
 }
 ```
 
@@ -153,36 +159,59 @@ If the developer decides to completely replace properties being logged, the `Tel
 For example, if the developer would like to completely replace the`BotMessageSend` properties and send multiple events, the following demonstrates how this could be performed:
 
 ```csharp
-class MyLuisRecognizer : TelemetryLuisRecognizer
+class MyLuisRecognizer : LuisRecognizer
 {
     ...
-    public Task OnRecognizerResult(RecognizerResult result,
-                  CancellationToken cancellation)
+    override protected Task OnRecognizerResultAsync(
+             RecognizerResult recognizerResult,
+             ITurnContext turnContext,
+             Dictionary<string, string> properties = null,
+             CancellationToken cancellationToken = default(CancellationToken))
     {
-        // Override properties for BotMsgSendEvent
+        // Override properties for LuisResult event
         var luisProperties = new Dictionary<string, string>();
         properties.Add("MyImportantProperty", "myImportantValue");
+        
         // Log event
         TelemetryClient.TrackEvent(
-                        LuisTelemetryConstants.LuisResultEvent,
-                        botMsgSendProperties);
+                        LuisTelemetryConstants.LuisResult,
+                        luisProperties);
+                        
         // Create second event.
         var secondEventProperties = new Dictionary<string, string>();
-        secondEventProperties.Add("activityId",
-                                   Activity.Id);
-        secondEventProperties.Add("MyImportantProperty",
-                                   "myImportantValue");
+        secondEventProperties.Add("MyImportantProperty2",
+                                   "myImportantValue2");
         TelemetryClient.TrackEvent(
                         "MySecondEvent",
                         secondEventProperties);
+        ...
     }
     ...
 }
 ```
 Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
 
+### Add properties per invocation
+Sometimes it's necessary to add additional properties during the invocation:
+```csharp
+var additionalProperties = new Dictionary<string, string>
+{
+   { "dialogId", "myDialogId" },
+   { "foo", "foovalue" },
+};
+
+var result = await recognizer.RecognizeAsync(turnContext,
+     additionalProperties,
+     CancellationToken.None).ConfigureAwait(false);
+```
+
 ### Events Logged from TelemetryLuisRecognizer
 [LuisResult](#luisresult)
+
+
+
+
+
 
 ## Telemetry QnA Recognizer
 
