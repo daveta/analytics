@@ -116,12 +116,12 @@ Note: When the standard properties are not logged, it will cause the out of box 
 
 ## Telemetry support LUIS 
 
-C#: **Microsoft.Bot.Builder.AI.Luis.TelemetryLuisRecognizer **
+C#: **Microsoft.Bot.Builder.AI.Luis.LuisRecognizer **
 
 
 ### Usage
 #### Out of box usage
-The LuisClientHandler is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+The LuisRecognizer is an existing Bot Framework component, and telemetry can be enabled by passing a IBotTelemetryClient interface.  Without modification, and it will peform logging that enables out of the box reports (for Application Insights) that (will) ship with the Bot Framework SDK.  You can override the default properties being logged and log new events as required.
 
 During construction, an IBotTelemetryClient object must be passed for this to work.
 
@@ -129,7 +129,7 @@ During construction, an IBotTelemetryClient object must be passed for this to wo
 var client = new LuisRecognizer(luisApp, luisOptions, ... telemetryClient);
 ```
 #### Adding properties
-If the developer decides to add additional properties, the TelemetryLuisClientHandler class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `LuisResult` event.  `LuisResult` is logged when a LUIS prediction call is performed.  Adding the additional property can be accomplished in the following way:
+If the developer decides to add additional properties, the `LuisRecognizer` class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `LuisResult` event.  `LuisResult` is logged when a LUIS prediction call is performed.  Adding the additional property can be accomplished in the following way:
 ```csharp
 class MyLuisRecognizer : LuisRecognizer 
 {
@@ -154,9 +154,9 @@ class MyLuisRecognizer : LuisRecognizer
 ```
 
 #### Completely replacing properties / Additional event(s)
-If the developer decides to completely replace properties being logged, the `TelemetryLuisRecognizer` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
+If the developer decides to completely replace properties being logged, the `LuisRecognizer` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
 
-For example, if the developer would like to completely replace the`BotMessageSend` properties and send multiple events, the following demonstrates how this could be performed:
+For example, if the developer would like to completely replace the`LuisResult` properties and send multiple events, the following demonstrates how this could be performed:
 
 ```csharp
 class MyLuisRecognizer : LuisRecognizer
@@ -189,7 +189,7 @@ class MyLuisRecognizer : LuisRecognizer
     ...
 }
 ```
-Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
+Note: When the standard properties are not logged, it will cause the Application Insights out of box reports shipped with the product to stop working.
 
 ### Add properties per invocation
 Sometimes it's necessary to add additional properties during the invocation:
@@ -207,8 +207,6 @@ var result = await recognizer.RecognizeAsync(turnContext,
 
 ### Events Logged from TelemetryLuisRecognizer
 [LuisResult](#luisresult)
-
-
 
 
 
