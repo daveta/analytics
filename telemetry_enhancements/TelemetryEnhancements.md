@@ -213,33 +213,53 @@ var result = await recognizer.RecognizeAsync(turnContext,
 
 ## Telemetry QnA Recognizer
 
-C#: **Microsoft.Bot.Builder.AI.Luis.TelemetryQnAMaker **
+C#: **Microsoft.Bot.Builder.AI.Luis.QnAMaker **
 
 
 ### Usage
 #### Out of box usage
-The TelemetryQnAMaker is a Bot Framework component that can be added without modification, and it will peform logging that enables out of the box reports that ship with the Bot Framework SDK. 
+The QnAMaker class is an existing Bot Framework component that adds two additional constructor parameters which enable logging that enable out of the box reports that ship with the Bot Framework SDK. The new `telemetryClient` references a `IBotTelemetryClient` interface which performs the logging.  
 
 ```csharp
-var client = new TelemetryQnAMaker(telemetryClient, endpoint, options, logPersonalInformation:true);
+var qna = new QnAMaker(endpoint, options, client, 
+                       telemetryClient: telemetryClient,
+                       logPersonalInformation: true);
 ```
-#### Adding properties
-If the developer decides to add additional properties, the TelemetryQnAMaker class can be derived.  For example, if the developer would like to add the property "MyImportantProperty" to the `QnAMessage` event.  `QnAMessage` is logged when a QnA call is performed.  Adding the additional property can be accomplished in the following way:
+#### Adding properties 
+If the developer decides to add additional properties, there are two methods of doing this - when properties need to be added during the QnA call to retrieve answers or deriving from the `QnAMaker` class.  
+
+The following demonstrates deriving from the `QnAMaker` class.  The example shows adding the property "MyImportantProperty" to the `QnAMessage` event.  The`QnAMessage` event is logged when a QnA `GetAnswers`call is performed.  In addition, we log a second event "MySecondEvent".
+
 ```csharp
-class MyQnAMaker : TelemetryQnAMaker 
+class MyQnAMaker : QnAMaker 
 {
    ...
-   protected Task OnRecognizerResult(QueryResult result,
-                  CancellationToken cancellation)
+   protected override Task OnQnaResultsAsync(
+                 QueryResult[] queryResults, 
+                 ITurnContext turnContext, 
+                 Dictionary<string, string> telemetryProperties = null, 
+                 Dictionary<string, double> telemetryMetrics = null, 
+                 CancellationToken cancellationToken = default(CancellationToken))
    {
-       var qnaEventProperties = FillQnAEventProperties(result, 
-               new Dictionary<string, string>
-               { {"MyImportantProperty", "myImportantValue" } } );
-        
-        TelemetryClient.TrackEvent(
-                        QnATelemetryConstants.QnAMessage,
-                        qnaEventProperties);
-       }    
+            var eventData = await FillQnAEventAsync(queryResults, turnContext, telemetryProperties, telemetryMetrics, cancellationToken).ConfigureAwait(false);
+
+            // Add my property
+            eventData.Properties.Add("MyImportantProperty", "myImportantValue");
+
+            // Log QnaMessage event
+            TelemetryClient.TrackEvent(
+                            QnATelemetryConstants.QnaMsgEvent,
+                            eventData.Properties,
+                            eventData.Metrics
+                            );
+
+            // Create second event.
+            var secondEventProperties = new Dictionary<string, string>();
+            secondEventProperties.Add("MyImportantProperty2",
+                                       "myImportantValue2");
+            TelemetryClient.TrackEvent(
+                            "MySecondEvent",
+                            secondEventProperties);       }    
     ...
 }
 ```
@@ -247,36 +267,47 @@ class MyQnAMaker : TelemetryQnAMaker
 #### Completely replacing properties / Additional event(s)
 If the developer decides to completely replace properties being logged, the `TelemetryQnAMaker` class can be derived (like above when extending properties).   Similarly, logging new events is performed in the same way.
 
-For example, if the developer would like to completely replace the`QnAMessage` properties and send multiple events, the following demonstrates how this could be performed:
+For example, if the developer would like to completely replace the`QnAMessage` properties, the following demonstrates how this could be performed:
 
 ```csharp
 class MyLuisRecognizer : TelemetryQnAMaker
 {
     ...
-    public Task OnRecognizerResult(RecognizerResult result,
-                  CancellationToken cancellation)
+    protected override Task OnQnaResultsAsync(
+         QueryResult[] queryResults, 
+         ITurnContext turnContext, 
+         Dictionary<string, string> telemetryProperties = null, 
+         Dictionary<string, double> telemetryMetrics = null, 
+         CancellationToken cancellationToken = default(CancellationToken))
     {
-        // Override properties for QnAMessage
-        var qnaProperties = new Dictionary<string, string>();
-        qnaProperties.Add("MyImportantProperty", "myImportantValue");
+        // Add properties from GetAnswersAsync
+        var properties = telemetryProperties ?? new Dictionary<string, string>();
+        // GetAnswerAsync properties overrides - don't add if already present.
+        properties.TryAdd("MyImportantProperty", "myImportantValue");
+
         // Log event
         TelemetryClient.TrackEvent(
-                        QnATelemetryConstants.QnAMessage,
-                        qnaProperties);
-        // Create second event.
-        var secondEventProperties = new Dictionary<string, string>();
-        secondEventProperties.Add("activityId",
-                                   Activity.Id);
-        secondEventProperties.Add("MyImportantProperty",
-                                   "myImportantValue");
-        TelemetryClient.TrackEvent(
-                        "MySecondEvent",
-                        secondEventProperties);
+                           QnATelemetryConstants.QnaMsgEvent,
+                            properties);
     }
     ...
 }
 ```
 Note: When the standard properties are not logged, it will cause the out of box reports shipped with the product to stop working.
+
+#### Adding properties during GetAnswersAsync
+If the developer has properties that need to be added during runtime, the `GetAnswersAsync` method can provide properties and/or metrics to add to the event.
+
+For example, if the developer wants to add a `dialogId` to the event, it can do so like the following:
+```csharp
+var telemetryProperties = new Dictionary<string, string>
+{
+   { "dialogId", myDialogId },
+};
+
+var results = await qna.GetAnswersAsync(context, opts, telemetryProperties);
+```
+The `QnaMaker` class provides the capability of overriding properties, including PersonalInfomation properties.
 
 ### Events Logged from TelemetryLuisRecognizer
 [QnAMessage](#qnamessage)
