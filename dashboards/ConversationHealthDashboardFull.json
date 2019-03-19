@@ -1,0 +1,1309 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "type": "string"
+        },
+        "virtualMachineResourceGroup": {
+            "type": "string"
+        },
+        "dashboardName": {
+            "type": "string"
+        },
+        "dashboardRegion": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "dashboardName": "[concat('Bot-', resourceGroup().name)]"
+    },
+    "resources": [
+        {
+            "properties": {
+                "lenses": {
+                    "0": {
+                        "order": 0,
+                        "parts": {
+                            "0": {
+                                "position": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend DialogId = customDimensions['DialogId']\r\n| where isnotempty(DialogId)\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallComplete\"),\r\n  top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"),\r\n  top-nested of tostring(DialogId) by count()\r\n| project Percentage=aggregated_timestamp * 1.0 / aggregated_timestamp1, timestamp, tostring(DialogId) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "DialogId",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "a0da6397-d336-46d6-b407-b5269cdaea15"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Complete by Dialog",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "customEvents\n| where name==\"WaterfallStart\"\n| extend DialogId = customDimensions['DialogId']\n| join kind=leftouter (customEvents | where name==\"WaterfallComplete\") on operation_Id \n| summarize starts=countif(name=='WaterfallStart'), completes=countif(name1=='WaterfallComplete') by bin(timestamp, 1d), tostring(DialogId)\n| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(DialogId) \n| render timechart"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "1": {
+                                "position": {
+                                    "x": 6,
+                                    "y": 0,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend DialogId = customDimensions['DialogId']\r\n| where isnotempty(DialogId)\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallCancel\"),\r\n  top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"),\r\n  top-nested of tostring(DialogId) by count()\r\n| project Percentage=aggregated_timestamp * 1.0 / aggregated_timestamp1, timestamp, tostring(DialogId) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "DialogId",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "308ad651-2aea-4456-85cd-6182907d59cf"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Cancel by Dialog",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "customEvents\n| where name==\"WaterfallStart\"\n| extend DialogId = customDimensions['DialogId']\n| join kind=leftouter (customEvents | where name==\"WaterfallCancel\") on operation_Id \n| summarize starts=countif(name=='WaterfallStart'), completes=countif(name1=='WaterfallCancel') by bin(timestamp, 1d), tostring(DialogId)\n| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(DialogId) \n| render timechart"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "2": {
+                                "position": {
+                                    "x": 12,
+                                    "y": 0,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend DialogId = customDimensions['DialogId']\r\n| where isnotempty(DialogId)\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallCancel\"),\r\n  top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"),\r\n  top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallComplete\"),\r\n  top-nested of tostring(DialogId) by count()\r\n| project Percentage=(aggregated_timestamp1 - (aggregated_timestamp + aggregated_timestamp2) * 1.0) / aggregated_timestamp1, timestamp, tostring(DialogId) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "DialogId",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "57b286b0-f3bf-4081-9f73-99dca74b0667"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Abandon by Dialog",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "customEvents\n| where name==\"WaterfallStart\"\n| extend DialogId = customDimensions['DialogId']\n| join kind=leftouter (customEvents | where name==\"WaterfallComplete\") on operation_Id \n| join kind=leftouter (customEvents | where name==\"WaterfallCancel\") on operation_Id \n| summarize starts=countif(name=='WaterfallStart'), cancels=countif(name=='WaterfallCancel'), completes=countif(name1=='WaterfallComplete') by bin(timestamp, 1d), tostring(DialogId)\n| project Percentage=max_of(0.0, (starts-(completes+cancels)) * 1.0 / starts), timestamp, tostring(DialogId) \n| render timechart\n"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "3": {
+                                "position": {
+                                    "x": 0,
+                                    "y": 4,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend intent=case(name startswith \"LuisIntent\", name, \"\")\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallComplete\"),    \r\n top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"), \r\n top-nested of tostring(intent) by count()\r\n| where isnotempty(intent)\r\n| project Percentage=(aggregated_timestamp * 1.0) / aggregated_timestamp1, timestamp, tostring(intent) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "intent",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "27007020-ebd4-4c23-b955-925c981055e2"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Complete by Intent",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "let CompleteWithIntentAggregate = () {\n  customEvents \n  | where name==\"WaterfallComplete\"\n  | join (customEvents \n     | where name startswith \"LuisIntent\"\n     | extend intent = customDimensions['Intent']\n     ) on operation_Id \n  | summarize completes=count() by bin(timestamp, 1d), tostring(intent)\n};\nlet StartWithIntentAggregate = () {\ncustomEvents\n| where name==\"WaterfallStart\"\n| join (customEvents \n    | where name startswith \"LuisIntent\"\n    | extend intent = customDimensions['Intent']\n    ) on operation_Id \n  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)\n};\nStartWithIntentAggregate\n| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intent\n| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(intent) \n| render timechart"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "4": {
+                                "position": {
+                                    "x": 6,
+                                    "y": 4,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend intent=case(name startswith \"LuisIntent\", name, \"\")\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallCancel\"),    \r\n top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"), \r\n top-nested of tostring(intent) by count()\r\n| where isnotempty(intent)\r\n| project Percentage=(aggregated_timestamp * 1.0) / aggregated_timestamp1, timestamp, tostring(intent) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "intent",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "b5a312b8-2415-47b7-8dad-f4a62dd21033"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Cancel by Intent",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "let CancelWithIntentAggregate = () {\n  customEvents \n  | where name==\"WaterfallCancel\"\n  | join (customEvents \n     | where name startswith \"LuisIntent\"\n     | extend intent = customDimensions['Intent']\n     ) on operation_Id \n  | summarize cancels=count() by bin(timestamp, 1d), tostring(intent)\n};\nlet StartWithIntentAggregate = () {\ncustomEvents\n| where name==\"WaterfallStart\"\n| join (customEvents \n    | where name startswith \"LuisIntent\"\n    | extend intent = customDimensions['Intent']\n    ) on operation_Id \n  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)\n};\nStartWithIntentAggregate\n| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intent\n| project Percentage=max_of(0.0, cancels * 1.0 / starts), timestamp, tostring(intent) \n| render timechart"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "5": {
+                                "position": {
+                                    "x": 12,
+                                    "y": 4,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| extend intent=case(name startswith \"LuisIntent\", name, \"\")\r\n| top-nested of bin(timestamp, 1d) by countif(name == \"WaterfallComplete\"),    \r\ntop-nested of bin(timestamp, 1d) by countif(name == \"WaterfallStart\"),\r\ntop-nested of bin(timestamp, 1d) by countif(name == \"WaterfallCancel\"),\r\ntop-nested of tostring(intent) by count()\r\n| where isnotempty(intent)\r\n| project Percentage=max_of(0, (aggregated_timestamp1 - (aggregated_timestamp+aggregated_timestamp2))) * 1.0 / aggregated_timestamp1, timestamp, tostring(intent) \r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-17T16:06:58.000Z/2019-01-08T16:06:58.378Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "Percentage",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "intent",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "b126c546-cb83-411f-a827-d35101a9a8c0"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "% Abandon by Intent",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]",
+                                            "Query": "let CompleteWithIntentAggregate = () {\n  customEvents \n  | where name==\"WaterfallComplete\"\n  | join (customEvents \n     | where name startswith \"LuisIntent\"\n     | extend intent = customDimensions['Intent']\n     ) on operation_Id \n  | summarize completes=count() by bin(timestamp, 1d), tostring(intent)\n};\nlet CancelWithIntentAggregate = () {\n  customEvents \n  | where name==\"WaterfallCancel\"\n  | join (customEvents \n     | where name startswith \"LuisIntent\"\n     | extend intent = customDimensions['Intent']\n     ) on operation_Id \n  | summarize cancels=count() by bin(timestamp, 1d), tostring(intent)\n};\nlet StartWithIntentAggregate = () {\ncustomEvents\n| where name==\"WaterfallStart\"\n| join (customEvents \n    | where name startswith \"LuisIntent\"\n    | extend intent = customDimensions['Intent']\n    ) on operation_Id \n  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)\n};\nStartWithIntentAggregate\n| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intent\n| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intent\n| project Percentage=max_of(0.0, (starts - (cancels + completes)) * 1.0 / starts), timestamp, tostring(intent) \n| render timechart"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "6": {
+                                "position": {
+                                    "x": 0,
+                                    "y": 8,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| where name startswith \"LuisIntent\"  \r\n| where timestamp > ago(24d) \r\n| summarize count() by bin(timestamp, 1d), name\r\n| render timechart"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "count_",
+                                                        "type": "Int64"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "name",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "0ddf7ddb-6919-4755-9d27-793e7e6d254c"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "isOptional": true
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Count of Intents",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "7": {
+                                "position": {
+                                    "x": 6,
+                                    "y": 8,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| join  (\r\n  customEvents \r\n   | where name == \"WaterfallComplete\" \r\n   | where timestamp > ago(24d)\r\n   | project operation_Id\r\n   | join (\r\n     customEvents\r\n     | where name == \"WaterfallStart\"\r\n     | project operation_Id)\r\n     on operation_Id) \r\n    on operation_Id\r\n| where name startswith \"LuisIntent\"\r\n| summarize count() by bin(timestamp, 1d), name \r\n| render barchart "
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "count_",
+                                                        "type": "Int64"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "name",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "99d6a16c-5d87-4521-8559-69de707aced4"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Bar"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "isOptional": true
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Count Complete by Intent",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "8": {
+                                "position": {
+                                    "x": 12,
+                                    "y": 8,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents \r\n   | where name == \"WaterfallStart\" \r\n   | where timestamp > ago(24d)   \r\n   | extend DialogId = customDimensions['DialogId']\r\n   | join (\r\n     customEvents\r\n     | where name == \"WaterfallComplete\" and isnotempty(operation_Id)\r\n     )\r\n     on operation_Id\r\n   | summarize count() by bin(timestamp, 1d), tostring(DialogId)\r\n   | render barchart \r\n"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "count_",
+                                                        "type": "Int64"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "DialogId",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "46a88730-17b7-44ec-8a8b-041807cdd5d5"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Bar"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "isOptional": true
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Count Complete by Dialog",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "9": {
+                                "position": {
+                                    "x": 0,
+                                    "y": 12,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| where timestamp > ago(24d) \r\n| extend DialogId = customDimensions['DialogId']\r\n| where name == \"WaterfallStep\"\r\n| summarize count() by bin(timestamp, 1h), tostring(DialogId), user_Id\r\n| summarize avg(count_) by tostring(DialogId)\r\n| render barchart"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "DialogId",
+                                                    "type": "String"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "avg_count_",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "825d5869-6a27-4c46-a351-379b5988188b"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Bar"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "isOptional": true
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Average Steps per Dialog",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "10": {
+                                "position": {
+                                    "x": 6,
+                                    "y": 12,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| where name==\"WaterfallStart\"\r\n| extend DialogId = customDimensions['DialogId']\r\n| join kind=leftouter (customEvents | where name==\"WaterfallCancel\") on operation_Id \r\n| join kind=leftouter (customEvents | where name==\"WaterfallComplete\") on operation_Id \r\n| extend duration = case(not(isnull(timestamp1)), timestamp1 - timestamp, \r\n                       not(isnull(timestamp2)), timestamp2 - timestamp, \r\n                       now()-timestamp)\r\n| summarize avg(duration) by bin(timestamp, 1d),  tostring(DialogId)\r\n"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-03T18:16:47.000Z/2019-01-11T18:16:47.065Z"
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "b797c4ea-39f3-4414-9bde-d88282cf74a2"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsGrid"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "isOptional": true
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "isOptional": true
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Average Dialog Duration by Day",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            },
+                            "11": {
+                                "position": {
+                                    "x": 12,
+                                    "y": 12,
+                                    "colSpan": 6,
+                                    "rowSpan": 4
+                                },
+                                "metadata": {
+                                    "inputs": [
+                                        {
+                                            "name": "ComponentId",
+                                            "value": {
+                                                "SubscriptionId": "[subscription().subscriptionId]",
+                                                "ResourceGroup": "[resourceGroup().name]",
+                                                "Name": "[parameters('virtualMachineName')]",
+                                                "ResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/components/', parameters('virtualMachineName'))]"
+                                            }
+                                        },
+                                        {
+                                            "name": "Query",
+                                            "value": "customEvents\r\n| where name startswith(\"LuisIntent\")\r\n| extend SentimentLabel = customDimensions['SentimentLabel']\r\n| extend SentimentScore = customDimensions['SentimentScore']\r\n| summarize percentiles(todouble(SentimentScore),50,95,99) by bin(timestamp, 1h), tostring(SentimentLabel)\r\n| render timechart\r\n"
+                                        },
+                                        {
+                                            "name": "TimeRange",
+                                            "value": "2018-12-03T18:16:47.000Z/2019-01-11T18:16:47.065Z"
+                                        },
+                                        {
+                                            "name": "Dimensions",
+                                            "value": {
+                                                "xAxis": {
+                                                    "name": "timestamp",
+                                                    "type": "DateTime"
+                                                },
+                                                "yAxis": [
+                                                    {
+                                                        "name": "percentile_SentimentScore_50",
+                                                        "type": "Double"
+                                                    }
+                                                ],
+                                                "splitBy": [
+                                                    {
+                                                        "name": "SentimentLabel",
+                                                        "type": "String"
+                                                    }
+                                                ],
+                                                "aggregation": "Sum"
+                                            }
+                                        },
+                                        {
+                                            "name": "Version",
+                                            "value": "1.0"
+                                        },
+                                        {
+                                            "name": "DashboardId",
+                                            "value": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/microsoft.insights/dashboards/', variables('dashboardName'))]"
+                                        },
+                                        {
+                                            "name": "PartId",
+                                            "value": "b4484ca2-0045-4726-9a66-9eed782a93eb"
+                                        },
+                                        {
+                                            "name": "PartTitle",
+                                            "value": "Analytics"
+                                        },
+                                        {
+                                            "name": "PartSubTitle",
+                                            "value": "[parameters('virtualMachineName')]"
+                                        },
+                                        {
+                                            "name": "resourceTypeMode",
+                                            "value": "components"
+                                        },
+                                        {
+                                            "name": "ControlType",
+                                            "value": "AnalyticsChart"
+                                        },
+                                        {
+                                            "name": "SpecificChart",
+                                            "value": "Line"
+                                        }
+                                    ],
+                                    "type": "Extension/AppInsightsExtension/PartType/AnalyticsPart",
+                                    "settings": {
+                                        "content": {
+                                            "PartTitle": "Sentiment",
+                                            "PartSubTitle": "[parameters('virtualMachineName')]"
+                                        }
+                                    },
+                                    "asset": {
+                                        "idInputName": "ComponentId",
+                                        "type": "ApplicationInsights"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "metadata": {
+                    "model": {
+                        "timeRange": {
+                            "value": {
+                                "relative": {
+                                    "duration": 24,
+                                    "timeUnit": 1
+                                }
+                            },
+                            "type": "MsPortalFx.Composition.Configuration.ValueTypes.TimeRange"
+                        },
+                        "filterLocale": {
+                            "value": "en-us"
+                        },
+                        "filters": {
+                            "value": {
+                                "MsPortalFx_TimeRange": {
+                                    "model": {
+                                        "format": "utc",
+                                        "granularity": "auto",
+                                        "relative": "30d"
+                                    },
+                                    "displayCache": {
+                                        "name": "UTC Time",
+                                        "value": "Past 30 days"
+                                    },
+                                    "filteredPartIds": [
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b81",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b83",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b85",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b87",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b89",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b8b",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b8d",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b8f",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b91",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b93",
+                                        "StartboardPart-MonitorChartPart-8bc49c11-b8fe-4aa3-9827-89b61e158b95",
+                                        "StartboardPart-AnalyticsPart-9b9688b4-fee4-48b3-8762-9035799a4094",
+                                        "StartboardPart-AnalyticsPart-9b9688b4-fee4-48b3-8762-9035799a4220",
+                                        "StartboardPart-AnalyticsPart-9b9688b4-fee4-48b3-8762-9035799a4222",
+                                        "StartboardPart-AnalyticsPart-6d635460-0eef-4ca6-9c4a-1db1796e6004",
+                                        "StartboardPart-AnalyticsPart-6d635460-0eef-4ca6-9c4a-1db1796e6006",
+                                        "StartboardPart-AnalyticsPart-6d635460-0eef-4ca6-9c4a-1db1796e6008",
+                                        "StartboardPart-AnalyticsPart-edb536ec-291c-4bf6-a351-0ca32f3b3004",
+                                        "StartboardPart-AnalyticsPart-edb536ec-291c-4bf6-a351-0ca32f3b3006",
+                                        "StartboardPart-AnalyticsPart-edb536ec-291c-4bf6-a351-0ca32f3b3008",
+                                        "StartboardPart-AnalyticsPart-edb536ec-291c-4bf6-a351-0ca32f3b300a",
+                                        "StartboardPart-AnalyticsPart-02cc2401-9285-4822-a711-05c79a5ac005",
+                                        "StartboardPart-AnalyticsPart-02cc2401-9285-4822-a711-05c79a5ac007",
+                                        "StartboardPart-AnalyticsPart-02cc2401-9285-4822-a711-05c79a5ac009",
+                                        "StartboardPart-AnalyticsPart-02cc2401-9285-4822-a711-05c79a5ac00b",
+                                        "StartboardPart-AnalyticsPart-02cc2401-9285-4822-a711-05c79a5ac00d",
+                                        "StartboardPart-AnalyticsPart-61c94be2-c2e0-4ae7-b998-2c4d2f5c5007",
+                                        "StartboardPart-AnalyticsPart-61c94be2-c2e0-4ae7-b998-2c4d2f5c5009",
+                                        "StartboardPart-AnalyticsPart-61c94be2-c2e0-4ae7-b998-2c4d2f5c500b",
+                                        "StartboardPart-AnalyticsPart-61c94be2-c2e0-4ae7-b998-2c4d2f5c500d",
+                                        "StartboardPart-AnalyticsPart-61c94be2-c2e0-4ae7-b998-2c4d2f5c500f",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c8005",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c8007",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c8009",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c800b",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c800d",
+                                        "StartboardPart-AnalyticsPart-f23b5a3f-1b3d-433a-8450-1ab9514c800f",
+                                        "StartboardPart-AnalyticsPart-75455a84-afb9-40fd-ba37-28306b074011",
+                                        "StartboardPart-AnalyticsPart-267eba46-4ff7-4890-9a3c-d4ee8822c005",
+                                        "StartboardPart-AnalyticsPart-267eba46-4ff7-4890-9a3c-d4ee8822c007",
+                                        "StartboardPart-AnalyticsPart-267eba46-4ff7-4890-9a3c-d4ee8822c009",
+                                        "StartboardPart-AnalyticsPart-a3c49a25-a26b-4dda-aeba-9dcba3b0e005",
+                                        "StartboardPart-AnalyticsPart-a3c49a25-a26b-4dda-aeba-9dcba3b0e007",
+                                        "StartboardPart-AnalyticsPart-a3c49a25-a26b-4dda-aeba-9dcba3b0e009",
+                                        "StartboardPart-AnalyticsPart-a3c49a25-a26b-4dda-aeba-9dcba3b0e00b",
+                                        "StartboardPart-AnalyticsPart-38dbda75-006e-4d7c-8046-357e59a5a005",
+                                        "StartboardPart-AnalyticsPart-38dbda75-006e-4d7c-8046-357e59a5a007",
+                                        "StartboardPart-AnalyticsPart-38dbda75-006e-4d7c-8046-357e59a5a009",
+                                        "StartboardPart-AnalyticsPart-38dbda75-006e-4d7c-8046-357e59a5a00b",
+                                        "StartboardPart-AnalyticsPart-38dbda75-006e-4d7c-8046-357e59a5a00d",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef004",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef006",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef008",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef00a",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef00c",
+                                        "StartboardPart-AnalyticsPart-3db61037-e547-428a-ae43-fac796eef00e",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec6005",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec6007",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec6009",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec600b",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec600d",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec600f",
+                                        "StartboardPart-AnalyticsPart-ad806f09-8cf9-45cf-b847-fbb7dbec6011",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b43004",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b43006",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b43008",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b4300a",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b4300c",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b4300e",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b43010",
+                                        "StartboardPart-AnalyticsPart-40cbaf60-1406-4e7e-8e25-38a3e0b43012",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e004",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e006",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e008",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e00a",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e00c",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e00e",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e010",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e012",
+                                        "StartboardPart-AnalyticsPart-f9d51b6d-866d-48ab-a496-ee139257e014",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad005",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad007",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad009",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad00b",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad00d",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad00f",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad011",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad013",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad015",
+                                        "StartboardPart-AnalyticsPart-e0203e4a-9908-4660-ac4e-0cde5cfad017",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d005",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d007",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d009",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d00b",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d00d",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d00f",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d011",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d013",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d015",
+                                        "StartboardPart-AnalyticsPart-1b25014b-cbbc-4252-b9ac-271af3c5d017",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57004",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57006",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57008",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab5700a",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab5700c",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab5700e",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57010",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57012",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57014",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57016",
+                                        "StartboardPart-AnalyticsPart-2a93cf9a-3d4d-4065-b968-ba87dab57018",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7005",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7007",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7009",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b700b",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b700d",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b700f",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7011",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7013",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7015",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7017",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b7019",
+                                        "StartboardPart-AnalyticsPart-08e1c481-c395-4326-b6c8-61b24e6b701b"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Portal/dashboards/', parameters('dashboardName'))]",
+            "name": "[variables('dashboardName')]",
+            "type": "Microsoft.Portal/dashboards",
+            "location": "[parameters('dashboardRegion')]",
+            "tags": {
+                "hidden-title": "[variables('dashboardName')]"
+              },
+            "apiVersion": "2015-08-01-preview"
+        }
+    ]
+}
