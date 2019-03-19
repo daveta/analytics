@@ -20,9 +20,9 @@ There are three new components  added to the SDK.  All components log using the 
 | Event properties can be extended | As a developer, I can add additional data to the existing Out-of-box event data to satisfy my companies reporting needs. |
 | Event properties can be completely replaced | As a developer, I can completely replace the Out-of-bot event data to satisfy my companies' reporting needs. |
 | Out of box reports can be invalidated | As a developer, I can change the properties being logged and break the out of box reports and dashboards |
-| Interfaces must include data privacy settings | As a developer, I can change what data is logged in the event storage based on a flag, so I can adhere to GDPR and other standards for privacy |
-| A default implementation should log events to Application Insights as "CustomEvent" | See event definitions below - search for "CustomEvent" |
-| Telemetry should be usable from LuisClient and Luis Recognizer | Customers using either the LuisClient or LuisRecognizer should be able to override pull telemetry |
+| Interfaces must include data privacy settings | As a developer, I can change what data is logged in the event storage based on a flag, so I can adhere to GDPR and other standards for privacy. |
+| A default implementation should log events to Application Insights as "CustomEvent" | By default, everything in Application Insights is logged as CustomEvent. |
+| ~~Telemetry should be usable from LuisClient and Luis Recognizer~~ | Customers using either the LuisClient or LuisRecognizer should be able to override pull telemetry. This approach was abandoned as the generated code does not enable us to fully satisfy above requirements without having to change the generated code by hand. |
 
 
 
