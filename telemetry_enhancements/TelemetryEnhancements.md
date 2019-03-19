@@ -5,11 +5,11 @@
 Today, the majority of the Bot Framework Telemetry being logged is from sample code.  This was to provide the maximum flexibility of data being logged.  In the Bot Framework v4.4 timeframe, we are enhancing the product to log from the product.
 
 ## Overview of changes
-There are three new components  added to the SDK.  All components log using the *IBotTelemetryClient* interface which can be overridden with a custom implementation.
+There are three new components  added to the SDK.  All components log using the *IBotTelemetryClient*  (or BotTelemetryClient in node.js) interface which can be overridden with a custom implementation.
 
 - A  Bot Framework Middleware component (*TelemetryLoggerMiddleware*) that will log when messages are received, sent, updated or deleted. User override for custom logging.
-- *TelemetryLuisRecognizer* class.  User can override for custom logging.  
-- *TelemetryQnAMaker*  class.  User can override for custom logging.
+- *LuisRecognizer* class.  User can override for custom logging in two ways - per invocation (add/replace properties) or derived classes.
+- *QnAMaker*  class.  User can override for custom logging in two ways - per invocation (add/replace properties) or derived classes.
 
 **Requirements**
 
@@ -32,7 +32,9 @@ https://github.com/Microsoft/AI/issues/840 : This can be fixed
 
 
 ## Telemetry Middleware
-**Microsoft.Bot.Builder.TelemetryLoggerMiddleware**
+C#: **Microsoft.Bot.Builder.TelemetryLoggerMiddleware**
+
+Typescript/js: **botbuilder-core**
 
 ### Usage
 #### Out of box usage
@@ -117,6 +119,10 @@ Note: When the standard properties are not logged, it will cause the out of box 
 ## Telemetry support LUIS 
 
 C#: **Microsoft.Bot.Builder.AI.Luis.LuisRecognizer **
+
+TypeScript/JS: **botbuilder-ai**
+
+
 
 
 ### Usage
@@ -214,6 +220,8 @@ var result = await recognizer.RecognizeAsync(turnContext,
 ## Telemetry QnA Recognizer
 
 C#: **Microsoft.Bot.Builder.AI.Luis.QnAMaker **
+
+Typescript/js: **botbuilder-ai**
 
 
 ### Usage
@@ -321,7 +329,7 @@ Logged when bot receives new message from a user.
 When not overridden, this event is logged from `Microsoft.Bot.Builder.TelemetryLoggerMiddleware` using the `Microsoft.Bot.Builder.IBotTelemetry.TrackEvent()` method.
 
 - Session Identifier  
-  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **session** identifier (*Temelemtry.Context.Session.Id*) used within Application Insights.  
+  - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **session** identifier (*Temeletry.Context.Session.Id*) used within Application Insights.  
   - Corresponds to the [Conversation ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#conversation) as defined by Bot Framework protocol..
   - The property name logged is `session_id`.
 
@@ -329,108 +337,149 @@ When not overridden, this event is logged from `Microsoft.Bot.Builder.TelemetryL
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer`  as the  **user**  identifier (*Telemetry.Context.User.Id*) used within Application Insights.  
   - The value of this property is a combination of the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#channel-id) and the [User ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) (concatenated together) properties as defined by the Bot Framework protocol.
   - The property name logged is `user_id`.
+
 - ActivityID 
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.
   - Corresponds to the [Activity ID](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#Id) as defined by Bot Framework protocol..
   - The property name is `activityId`.
+
 - Channel Identifier
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.  
   - Corresponds to the [Channel Identifier](https://github.com/Microsoft/botframework-obi/blob/master/botframework-activity/botframework-activity.md#id) of the Bot Framework protocol.
   - The property name logged is `channelId`.
+
 - ActivityType 
   - When using Application Insights, this is logged from the `TelemetryBotIdInitializer` as a Property to the event.  
   - Corresponds to the [Activity Type](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#type) of the Bot Framework protocol.
   - The property name logged is `activityType`.
+
 - Text
-  - Optionally logged when the `logPersonalInformation` property is set to `true`.
+  - **Optionally** logged when the `logPersonalInformation` property is set to `true`.
   - Corresponds to the [Activity Text](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#text) field of the Bot Framework protocol.
   - The property name logged is `text`.
+
+- Speak
+
+  - **Optionally** logged when the `logPersonalInformation` property is set to `true`.
+  - Corresponds to the [Activity Speak](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#speak) field of the Bot Framework protocol.
+  - The property name logged is `speak`.
+
+  - 
+
 - FromId
   - Corresponds to the [From Identifier](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromId`.
+
 - FromName
-  - Optionally logged when the `logPersonalInformation` property is set to `true`.
+  - **Optionally** logged when the `logPersonalInformation` property is set to `true`.
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
+
 - RecipientId
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
+
 - RecipientName
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
+
 - ConversationId
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
+
 - ConversationName
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
+
 - Locale
   - Corresponds to the [From Name](https://github.com/Microsoft/botframework-obi/blob/f4e9e2f75c144cfd22a9f438e5b5b139fe618aad/protocols/botframework-activity/botframework-activity.md#from) field of the Bot Framework protocol.
   - The property name logged is `fromName`.
 
 ## BotMessageSend 
-**Logged From:** TelemetryLoggerMiddleware (**Enterprise Sample**)
+**Logged From:** TelemetryLoggerMiddleware 
 
 Logged when bot sends a message.
 
-- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- UserID   (From Telemetry Initializer)
+- SessionID  (From Telemetry Initializer)
+- ActivityID   (From Telemetry Initializer)
+- Channel   (From Telemetry Initializer)
+- ActivityType   (From Telemetry Initializer)
 - ReplyToID
-- Channel  (Source channel - e.g. Skype, Cortana, Teams)
 - RecipientId
 - ConversationName
 - Locale
-- Text (Optional for PII)
 - RecipientName (Optional for PII)
+- Text (Optional for PII)
+- Speak (Optional for PII)
 
 
 ## BotMessageUpdate
 **Logged From:** TelemetryLoggerMiddleware
 Logged when a message is updated by the bot (rare case)
+- UserID   (From Telemetry Initializer)
+- SessionID  (From Telemetry Initializer)
+- ActivityID  (From Telemetry Initializer)
+- Channel   (From Telemetry Initializer)
+- ActivityType   (From Telemetry Initializer)
+- RecipientId
+- ConversationId
+- ConversationName
+- Locale
+- Text (Optional for PII)
+
 
 ## BotMessageDelete
 **Logged From:** TelemetryLoggerMiddleware
 Logged when a message is deleted by the bot (rare case)
+- UserID   (From Telemetry Initializer)
+- SessionID  (From Telemetry Initializer)
+- ActivityID   (From Telemetry Initializer)
+- Channel   (From Telemetry Initializer)
+- ActivityType   (From Telemetry Initializer)
+- RecipientId
+- ConversationId
+- ConversationName
 
 # Appendix B: LUIS Events
 
-## CustomEvent: LuisIntent.INENTName 
-**Logged From:** TelemetryLuisRecognizer (**Enterprise Sample**)
+## CustomEvent: LuisEvent
+**Logged From:** LuisRecognizer
 
 Logs results from LUIS service.
 
-- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
+- UserID   (From Telemetry Initializer)
+- SessionID  (From Telemetry Initializer)
+- ActivityID  (From Telemetry Initializer)
+- Channel  (From Telemetry Initializer)
+- ActivityType  (From Telemetry Initializer)
+- ApplicationId
 - Intent
 - IntentScore
-- Question
-- ConversationId
+- Intent2 
+- IntentScore2 
+- FromId
 - SentimentLabel
 - SentimentScore
-- *LUIS entities*
-- **NEW** DialogId
+- Entities (as json)
+- Question (Optional for PII)
 
 # Appendix C: QnA Events
 
 ## CustomEvent: QnAMessage
-**Logged From:** TelemetryQnaMaker (**Enterprise Sample**)
+**Logged From:** QnaMaker
 
 Logs results from QnA Maker service.
 
-- UserID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ConversationID ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityID  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- Channel  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- ActivityType  ([From Telemetry Initializer](#identifiers-added-to-custom-events))
-- Username
-- ConversationId
-- OriginalQuestion
-- Question
+- UserID  (From Telemetry Initializer)
+- SessionID  (From Telemetry Initializer)
+- ActivityID  (From Telemetry Initializer)
+- Channel  (From Telemetry Initializer)
+- ActivityType   (From Telemetry Initializer)
+- Username (Optional for PII)
+- Question (Optional for PII)
+- MatchedQuestion
+- QuestionId
 - Answer
-- Score (*Optional*: if we found knowledge)
+- Score
+- ArticleFound
