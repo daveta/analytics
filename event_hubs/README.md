@@ -1,6 +1,6 @@
 # Stream Analytics and Power BI: A real-time analytics dashboard for bots
 This sample demonstrates how to use [Event Hubs][14], [Stream Analytics][15] and [Power BI][16] to create a real-time dashboard.
-![Sample PoweBI Dashboard](images\sample_powerbi_dashboard.PNG)
+![Sample PoweBI Dashboard](./images/sample_powerbi_dashboard.PNG)
 
 ## Prerequisites
 This sample **requires** prerequisites in order to run.
