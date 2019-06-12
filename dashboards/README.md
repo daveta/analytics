@@ -14,7 +14,8 @@ The dashboard here is 100% recycled components that have been tested, the work i
 customEvents
 | where name=="WaterfallStart"
 | extend DialogId = customDimensions['DialogId']
-| join kind=leftouter (customEvents | where name=="WaterfallComplete") on operation_Id 
+| extend InstanceId = tostring(customDimensions['InstanceId'])
+| join kind=leftouter (customEvents | where name=="WaterfallComplete" | extend InstanceId = tostring(customDimensions['InstanceId'])) on InstanceId    
 | summarize starts=countif(name=='WaterfallStart'), completes=countif(name1=='WaterfallComplete') by bin(timestamp, 1d), tostring(DialogId)
 | project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(DialogId) 
 | render timechart
@@ -25,7 +26,8 @@ customEvents
 customEvents
 | where name=="WaterfallStart"
 | extend DialogId = customDimensions['DialogId']
-| join kind=leftouter (customEvents | where name=="WaterfallCancel") on operation_Id 
+| extend InstanceId = tostring(customDimensions['InstanceId'])
+| join kind=leftouter (customEvents | where name=="WaterfallCancel" | extend InstanceId = tostring(customDimensions['InstanceId'])) on InstanceId    
 | summarize starts=countif(name=='WaterfallStart'), completes=countif(name1=='WaterfallCancel') by bin(timestamp, 1d), tostring(DialogId)
 | project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(DialogId) 
 | render timechart
@@ -36,8 +38,9 @@ customEvents
 customEvents
 | where name=="WaterfallStart"
 | extend DialogId = customDimensions['DialogId']
-| join kind=leftouter (customEvents | where name=="WaterfallComplete") on operation_Id 
-| join kind=leftouter (customEvents | where name=="WaterfallCancel") on operation_Id 
+| extend InstanceId = tostring(customDimensions['InstanceId'])
+| join kind=leftouter (customEvents | where name=="WaterfallComplete" | extend InstanceId = tostring(customDimensions['InstanceId'])) on InstanceId    
+| join kind=leftouter (customEvents | where name=="WaterfallCancel" | extend InstanceId = tostring(customDimensions['InstanceId'])) on InstanceId    
 | summarize starts=countif(name=='WaterfallStart'), cancels=countif(name=='WaterfallCancel'), completes=countif(name1=='WaterfallComplete') by bin(timestamp, 1d), tostring(DialogId)
 | project Percentage=max_of(0.0, (starts-(completes+cancels)) * 1.0 / starts), timestamp, tostring(DialogId) 
 | render timechart
@@ -51,95 +54,133 @@ In my testing, this appeared to be a bit more consistent.
 
 ```sql
 let CompleteWithIntentAggregate = () {
+customEvents
+| join(
   customEvents 
-  | where name=="WaterfallComplete"
-  | join (customEvents 
-     | where name startswith "LuisIntent"
-     | extend intent = customDimensions['Intent']
-     ) on operation_Id 
-  | summarize completes=count() by bin(timestamp, 1d), tostring(intent)
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
+   | join (
+     customEvents
+     | where name == "WaterfallComplete"
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize completes=count() by bin(timestamp, 1d), intentName
 };
 let StartWithIntentAggregate = () {
 customEvents
-| where name=="WaterfallStart"
-| join (customEvents 
-    | where name startswith "LuisIntent"
-    | extend intent = customDimensions['Intent']
-    ) on operation_Id 
-  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)
+| join(
+  customEvents 
+   | where name == "WaterfallStart" 
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize starts=count() by bin(timestamp, 1d), intentName
 };
 StartWithIntentAggregate
-| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intent
-| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(intent) 
+| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intentName
+| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(intentName)
 | render timechart
 ```
 
 ### % Cancel Intent
 ```sql
 let CancelWithIntentAggregate = () {
+customEvents
+| join(
   customEvents 
-  | where name=="WaterfallCancel"
-  | join (customEvents 
-     | where name startswith "LuisIntent"
-     | extend intent = customDimensions['Intent']
-     ) on operation_Id 
-  | summarize cancels=count() by bin(timestamp, 1d), tostring(intent)
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
+   | join (
+     customEvents
+     | where name == "WaterfallCancel"
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize completes=count() by bin(timestamp, 1d), intentName
 };
 let StartWithIntentAggregate = () {
 customEvents
-| where name=="WaterfallStart"
-| join (customEvents 
-    | where name startswith "LuisIntent"
-    | extend intent = customDimensions['Intent']
-    ) on operation_Id 
-  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)
+| join(
+  customEvents 
+   | where name == "WaterfallStart" 
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize starts=count() by bin(timestamp, 1d), intentName
 };
 StartWithIntentAggregate
-| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intent
-| project Percentage=max_of(0.0, cancels * 1.0 / starts), timestamp, tostring(intent) 
+| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intentName
+| project Percentage=max_of(0.0, completes * 1.0 / starts), timestamp, tostring(intentName)
 | render timechart
 ```
 
 ### % Abandon Intent
 ```sql
 let CompleteWithIntentAggregate = () {
+customEvents
+| join(
   customEvents 
-  | where name=="WaterfallComplete"
-  | join (customEvents 
-     | where name startswith "LuisIntent"
-     | extend intent = customDimensions['Intent']
-     ) on operation_Id 
-  | summarize completes=count() by bin(timestamp, 1d), tostring(intent)
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
+   | join (
+     customEvents
+     | where name == "WaterfallComplete"
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize completes=count() by bin(timestamp, 1d), intentName
 };
 let CancelWithIntentAggregate = () {
+customEvents
+| join(
   customEvents 
-  | where name=="WaterfallCancel"
-  | join (customEvents 
-     | where name startswith "LuisIntent"
-     | extend intent = customDimensions['Intent']
-     ) on operation_Id 
-  | summarize cancels=count() by bin(timestamp, 1d), tostring(intent)
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
+   | join (
+     customEvents
+     | where name == "WaterfallCancel"
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize cancels=count() by bin(timestamp, 1d), intentName
 };
 let StartWithIntentAggregate = () {
 customEvents
-| where name=="WaterfallStart"
-| join (customEvents 
-    | where name startswith "LuisIntent"
-    | extend intent = customDimensions['Intent']
-    ) on operation_Id 
-  | summarize starts=count() by bin(timestamp, 1d), tostring(intent)
+| join(
+  customEvents 
+   | where name == "WaterfallStart" 
+   | project operation_Id ) 
+    on operation_Id
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize starts=count() by bin(timestamp, 1d), intentName
 };
 StartWithIntentAggregate
-| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intent
-| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intent
-| project Percentage=max_of(0.0, (starts - (cancels + completes)) * 1.0 / starts), timestamp, tostring(intent) 
+| join kind=leftouter (CompleteWithIntentAggregate) on timestamp, intentName
+| join kind=leftouter (CancelWithIntentAggregate) on timestamp, intentName
+| project Percentage=max_of(0.0, (starts - (cancels + completes)) * 1.0 / starts), timestamp, tostring(intentName) 
 | render timechart
 ```
 ### Count Intent
 
 ```sql
 customEvents
-| where name startswith "LuisIntent"  
+| where name startswith "LuisResult"  
 | where timestamp > ago(24d) 
 | summarize count() by bin(timestamp, 1d), name
 | render timechart
@@ -148,36 +189,41 @@ customEvents
 ```sql
 -- The inner join set (WaterfallComplete) could be materialized if scale becomes a problem.
 customEvents
-| join  (
+| join(
   customEvents 
-   | where name == "WaterfallComplete" 
-   | where timestamp > ago(24d)
-   | project operation_Id
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
    | join (
      customEvents
-     | where name == "WaterfallStart"
-     | project operation_Id)
-     on operation_Id) 
+     | where name == "WaterfallComplete"
+     | where timestamp > ago(24d)
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
     on operation_Id
-| where name startswith "LuisIntent"
-| summarize count() by bin(timestamp, 1d), name 
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize count() by intentName 
 | render barchart 
 ```
 ### Cancelled  by Intent
 ```sql
 customEvents
-| join  (
+| join(
   customEvents 
-   | where name == "WaterfallCancel" 
-   | project operation_Id
+   | where name == "WaterfallStart" 
+   | extend instanceId = tostring(customDimensions['InstanceId'])
    | join (
      customEvents
-     | where name == "WaterfallStart"
-     | project operation_Id)
-     on operation_Id) 
+     | where name == "WaterfallCancel"
+     | where timestamp > ago(24d)
+     | extend instanceId = tostring(customDimensions['InstanceId']))
+     on instanceId
+   | project operation_Id ) 
     on operation_Id
-| where name startswith "LuisIntent"
-| summarize count() by bin(timestamp, 1d), name 
+| where name startswith "LuisResult"
+| extend intentName = tostring(customDimensions['intent'])
+| summarize count() by intentName 
 | render barchart 
 ```
 
@@ -189,11 +235,13 @@ customEvents
    | where name == "WaterfallStart" 
    | where timestamp > ago(24d)   
    | extend DialogId = customDimensions['DialogId']
+   | extend instanceId = tostring(customDimensions['InstanceId'])
    | join kind=leftanti (
      customEvents
-     | where name == "WaterfallComplete" and isnotempty(operation_Id)
+     | where name == "WaterfallComplete" 
+     | extend instanceId = tostring(customDimensions['InstanceId'])
      )
-     on operation_Id
+     on instanceId
    | summarize count() by bin(timestamp, 1d), tostring(DialogId)
    | render barchart 
 ```
@@ -204,11 +252,13 @@ customEvents
    | where name == "WaterfallStart" 
    | where timestamp > ago(24d)   
    | extend DialogId = customDimensions['DialogId']
+   | extend instanceId = tostring(customDimensions['InstanceId'])
    | join (
      customEvents
-     | where name == "WaterfallComplete" and isnotempty(operation_Id)
+     | where name == "WaterfallComplete" 
+     | extend instanceId = tostring(customDimensions['InstanceId'])
      )
-     on operation_Id
+     on instanceId
    | summarize count() by bin(timestamp, 1d), tostring(DialogId)
    | render barchart 
 ```
@@ -220,16 +270,18 @@ customEvents
 ```sql
 -- The inner join set (WaterfallComplete) could be materialized if scale becomes a problem.
 customEvents
-| where name startswith "LuisIntent"
+| where name startswith "LuisResult"
 | where timestamp > ago(1d)   
 | join (
   customEvents 
-   | where name == "WaterfallStart" 
+   | where name == "WaterfallStart"
+   | extend instanceId = tostring(customDimensions['InstanceId'])
    | join kind=leftanti (
      customEvents
-     | where name == "WaterfallComplete" and isnotempty(operation_Id)
+     | where name == "WaterfallComplete"
+     | extend instanceId = tostring(customDimensions['InstanceId'])
      )
-     on operation_Id
+     on instanceId
   ) 
   on operation_Id
 | summarize count() by bin(timestamp, 1d), name 
@@ -255,8 +307,9 @@ Durations are difficult to graph in Kusto (haven't found a meaningful visualizat
 customEvents
 | where name=="WaterfallStart"
 | extend DialogId = customDimensions['DialogId']
-| join kind=leftouter (customEvents | where name=="WaterfallCancel") on operation_Id 
-| join kind=leftouter (customEvents | where name=="WaterfallComplete") on operation_Id 
+| extend instanceId = tostring(customDimensions['InstanceId'])
+| join kind=leftouter (customEvents | where name=="WaterfallCancel" | extend instanceId = tostring(customDimensions['InstanceId'])) on instanceId 
+| join kind=leftouter (customEvents | where name=="WaterfallComplete" | extend instanceId = tostring(customDimensions['InstanceId'])) on instanceId 
 | extend duration = case(not(isnull(timestamp1)), timestamp1 - timestamp, 
                        not(isnull(timestamp2)), timestamp2 - timestamp, 
                        now()-timestamp)
