@@ -19,10 +19,11 @@ This is a **dirty read** attempt around collecting telemetry for Adaptive Dialog
 ## Scenario A: Enable Business User
 
 ### Baseline
-Get roughly analogous events to `WaterfallStart`, `WaterfallStep`, `WaterfallComplete` and `WaterfallCancel`.
-
+Get roughly analogous events to `WaterfallStart`, `WaterfallStep`, `WaterfallComplete` and `WaterfallCancel`.  Conceptually, Waterfall Dialog telemetry was about collecting enough properties to fulfill a business objective.  The events were designed to track that progress.  
   > **Note**: Event names below do not match [Adaptive Docs](https://github.com/microsoft/BotBuilder-Samples/tree/master/experimental/adaptive-dialog), I don't see `sequence` mentioned in docs but seems prominent in the code so surfacing it to event names.  
+  > **Note**: There are probably better places to collect the data, but not familiar enough with Adaptive to know how it works.
 
+  
 EventName |Properties | Description
 --- | --- | ---
 SequenceStarted| user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) | Called when a new instance of the sequence has been pushed onto the stack and is being activated.  Possibly performed in the Dialog base class. 
