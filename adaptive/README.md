@@ -29,7 +29,7 @@ EventName |Properties | Description
 SequenceStarted| user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) | Called when a new instance of the sequence has been pushed onto the stack and is being activated.  Alternative could be logged as BeginDialog in the Dialog base class. 
 RunCommand | compute_id, user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) | Called when the "sequence" step is executing (?).  I believe a step within a Adaptive dialog can invoke a Waterfall, so need to figure out how all the ID's work to track across entire sequence.
 SequenceEnded | user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) |  Called when the "sequence" is ending.  Possibly performed in the Planner class.
-CancelDialog | user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) | Specific type of Adaptive Event. At this point, it seems to me that dialogs and sequences are comingled based on interruptions/other. 
+CancelDialog | user_id, session_id, activity_id, activity_type, channel_id, dialog_id, dialog_id (?), instance_id (?) | Specific type of Adaptive Event. At this point, it seems to me that dialogs and sequences are comingled based on interruptions/other. I'm assuming you can infer parent sequence.
 
 
 
