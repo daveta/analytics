@@ -1,16 +1,14 @@
 # Adaptive Dialog Telemetry
-DRAFT DRAFT
+**DRAFT DRAFT**
 
 ## Summary 
 This is a **dirty read** attempt around collecting telemetry for Adaptive Dialog.
 
-Scenario Set A: Enable Business User
-- Provide business analyst with insights into their bot.
-- Provide hints to the developer as to areas which need attention.
-- Parity with existing Telemetry
+**Scenario Set A**: Enable Business User
+- Parity with existing Waterfall Telemetry
 
-Scenario Set B: Enable Developer
-- Provide events on what's happening inside Adaptive
+**Scenario Set B**: Enable Developer
+- Provide events on what's happening inside Adaptive wormhole
 
 ## Background
 - [4.6 Dashboards](https://github.com/daveta/analytics/tree/master/dashboards)
@@ -39,6 +37,7 @@ CancelDialog | user_id, session_id, activity_id, activity_type, channel_id, dial
 
 ### DialogCommand
 These appear to be composer primitives.
+
 EventName |Properties | Description
 --- | --- | ---
 CancelAllDialogs | ?? | ??
@@ -63,6 +62,7 @@ SequenceFlush | ApplyChanges | ??
 
 ### Base Dialog
 If we want all-up instrumentation of all dialogs.
+
 EventName |Properties | Description
 --- | --- | ---
 BeginDialog| DialogContext Props, Options? | Called when a new instance of the dialog has been pushed onto the stack and is being activated.
